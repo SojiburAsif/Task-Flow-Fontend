@@ -1,22 +1,9 @@
 import { Route } from "@/types/Router.type";
-import {
-    CalendarCheck,
-    ClipboardList,
-    CreditCard,
-    Home,
-    Settings,
-    ShieldCheck,
-    Sparkles,
-    Stethoscope,
-    UserCog,
-    Users,
-    UserSquare2,
-    Bell,
-} from "lucide-react";
+import { ClipboardList, Home, Users, Bell } from "lucide-react";
 
 export const TeamMemberRouters: Route[] = [
     {
-        title: "Dashboard",
+        title: "Member Workspace",
         items: [
             { title: "Home", url: "/dashboard", icon: Home },
             { title: "My Tasks", url: "/dashboard/my-tasks", icon: ClipboardList },
@@ -24,4 +11,4 @@ export const TeamMemberRouters: Route[] = [
             { title: "Notifications", url: "/dashboard/notifications", icon: Bell },
         ],
     }
-]
+];

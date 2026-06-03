@@ -1,22 +1,9 @@
 import { Route } from "@/types/Router.type";
-import {
-    CalendarCheck,
-    ClipboardList,
-    CreditCard,
-    Home,
-    Settings,
-    ShieldCheck,
-    Sparkles,
-    Stethoscope,
-    UserCog,
-    Users,
-    UserSquare2,
-    Bell,
-} from "lucide-react";
+import { CalendarCheck, ClipboardList, CreditCard, Home, Settings, Sparkles, Stethoscope, UserCog, Users, UserSquare2, Bell } from "lucide-react";
 
 export const AdminRouters: Route[] = [
     {
-        title: "Dashboard",
+        title: "Admin Workspace",
         items: [
             { title: "Home", url: "/dashboard", icon: Home },
             { title: "Create Provider", url: "/dashboard/create-provider", icon: Settings },
@@ -32,4 +19,4 @@ export const AdminRouters: Route[] = [
             { title: "All Admins", url: "/dashboard/AllAdmin", icon: UserCog }
         ],
     }
-]
+];

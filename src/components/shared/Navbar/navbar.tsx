@@ -7,7 +7,7 @@ import { ModeToggle } from "../Theme/Toogle";
 import { useTheme } from "@/components/provider/theme-provider";
 
 
-const IS_USER_LOGGED_IN = true; 
+const IS_USER_LOGGED_IN = false; 
 
 const navItems = [
   { label: "Features", href: "#features" },
