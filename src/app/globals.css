@@ -1,0 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700;800&display=swap");
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Ubuntu", "Segoe UI", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #000000;
+    --foreground: #ededed;
+  }
+}
+
+html.dark,
+:root.dark {
+  --background: #000000;
+  --foreground: #f5f5f5;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Ubuntu", "Segoe UI", Arial, sans-serif;
+}
+
+html.dark body {
+  background: #000000;
+  color: #f5f5f5;
+}
