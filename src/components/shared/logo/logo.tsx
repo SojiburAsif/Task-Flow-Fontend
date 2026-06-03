@@ -14,7 +14,7 @@ export default function Logo() {
         height={54}
         className="h-13 w-auto object-contain"
       />
-      <span className="">
+      <span className="text-white transition-colors">
         TaskFlow
       </span>
     </Link>

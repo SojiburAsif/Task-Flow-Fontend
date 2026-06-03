@@ -1,11 +1,37 @@
-export default function ProjectManagerDashboardPage() {
+import { DashboardOverview } from "@/components/Dashboard/dashboard-overview";
+import { getDashboardStats } from "@/services/dashboard.service";
+
+export default async function ProjectManagerDashboardPage() {
+  const stats = await getDashboardStats();
+
   return (
-    <section className="rounded-3xl border border-border/60 bg-background p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Project manager panel</p>
-      <h2 className="mt-2 text-2xl font-semibold text-foreground">Delivery control</h2>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-        Plan milestones, balance workloads, and keep execution aligned with deadlines.
-      </p>
-    </section>
-  )
+    <DashboardOverview
+      title="Delivery control"
+      description="Plan milestones, balance workloads, and keep execution aligned with deadlines."
+      roleLabel="Project manager panel"
+      stats={stats}
+      links={[
+        {
+          label: "Progress chart",
+          href: "#progress",
+          description: "See how each project is moving in the current cycle.",
+        },
+        {
+          label: "Priority breakdown",
+          href: "#priority",
+          description: "Review where the urgent work is concentrated.",
+        },
+        {
+          label: "Live counters",
+          href: "#summary",
+          description: "Check totals for projects, tasks, completed, and overdue items.",
+        },
+        {
+          label: "My tasks",
+          href: "/dashboard/my-tasks",
+          description: "Jump to the task list view for execution details.",
+        },
+      ]}
+    />
+  );
 }

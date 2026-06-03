@@ -1,10 +1,10 @@
 import React from "react";
+import { redirect } from "next/navigation";
+
 import { AppSidebar } from "@/components/Dashboard/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
-// আপনার প্রোজেক্টের jwtUtils বা getUserInfo ইমপোর্ট করে নেবেন
-// import { jwtUtils } from "@/lib/jwtUtils";
-// import { getUserInfo } from "@/services/auth.service";
+import { getCurrentUser } from "@/lib/currentUser";
+import { normalizeDashboardRole } from "@/lib/roleUtils";
 
 export default async function DashboardLayout({
   children,
@@ -17,34 +17,20 @@ export default async function DashboardLayout({
   projectManager: React.ReactNode;
   teamMember: React.ReactNode;
 }) {
-  // ========================================================
-  // Authentication & Role Validation Logic
-  // ========================================================
-  /* 
-    আপনার রিয়েল অ্যাপে নিচের কোডগুলো আনকমেন্ট করে ব্যবহার করবেন:
-    const user = await getUserInfo();
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("accessToken")?.value;
-    const decodedToken = accessToken ? jwtUtils.decodedToken(accessToken) : null;
-    
-    if (!user && !decodedToken) {
-      redirect("/login");
-    }
-    const rawRole = String(user?.role || decodedToken?.role || "").toUpperCase();
-  */
+  const user = await getCurrentUser();
 
-  // ডেমো পারপাস (TypeScript কে বোঝানোর জন্য as টাইপ কাস্টিং করা হলো)
-  const rawRole = "ADMIN" as "ADMIN" | "TEAM_MEMBER" | "PROJECT_MANAGER";
-  
+  if (!user) {
+    redirect("/login");
+  }
+
+  const rawRole = normalizeDashboardRole(user.role);
+
   const userInfo = {
-    name: "Md Asif", // user?.name
-    role: rawRole, // rawRole
-    email: "admin@taskflow.com"
+    name: user.name,
+    role: rawRole,
+    email: user.email,
   };
 
-  // ========================================================
-  // Parallel Route Slot Selection
-  // ========================================================
   let renderSlot: React.ReactNode;
   
   switch (rawRole) {
@@ -64,8 +50,10 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={userInfo} />
-      <SidebarInset className="min-h-svh bg-background">
-        <main className="flex-1 px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+      <SidebarInset className="min-h-svh bg-zinc-50 text-zinc-950 transition-colors dark:bg-black dark:text-zinc-50">
+        <main className="">
+          {/* Welcome card removed per design request */}
+
           {renderSlot}
         </main>
       </SidebarInset>

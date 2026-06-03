@@ -15,6 +15,11 @@ const serverEnvSchema = z.object({
   IIMGBB_KEY: z.string().min(1, "IIMGBB_KEY is required"),
 });
 
+const proxyEnvSchema = z.object({
+  BASE_API_URL: z.string().url("BASE_API_URL must be a valid URL"),
+  JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET is required"),
+});
+
 const formatEnvErrors = (issues: { path: PropertyKey[]; message: string }[]) => {
   return issues
     .map((issue) => `${issue.path.map((segment) => String(segment)).join(".")}: ${issue.message}`)
@@ -36,7 +41,9 @@ if (!parsedPublic.success) {
 export const publicEnv = parsedPublic.data;
 
 type ServerEnv = z.infer<typeof serverEnvSchema>;
+type ProxyEnv = z.infer<typeof proxyEnvSchema>;
 let cachedServerEnv: ServerEnv | null = null;
+let cachedProxyEnv: ProxyEnv | null = null;
 
 export const getServerEnv = (): ServerEnv => {
   if (cachedServerEnv) {
@@ -57,6 +64,25 @@ export const getServerEnv = (): ServerEnv => {
 
   cachedServerEnv = parsedServer.data;
   return cachedServerEnv;
+};
+
+export const getProxyEnv = (): ProxyEnv => {
+  if (cachedProxyEnv) {
+    return cachedProxyEnv;
+  }
+
+  const parsedProxy = proxyEnvSchema.safeParse({
+    BASE_API_URL: process.env.BASE_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL,
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+  });
+
+  if (!parsedProxy.success) {
+    const formattedErrors = formatEnvErrors(parsedProxy.error.issues);
+    throw new Error(`Invalid proxy environment variables:\n${formattedErrors}`);
+  }
+
+  cachedProxyEnv = parsedProxy.data;
+  return cachedProxyEnv;
 };
 
 // Backward-compatible alias for client-safe values.

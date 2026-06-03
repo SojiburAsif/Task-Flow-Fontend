@@ -6,12 +6,20 @@ import Link from 'next/link';
 import { Mail, Lock } from 'lucide-react';
 import Logo from '@/components/shared/logo/logo';
 import { useTheme } from '@/components/provider/theme-provider';
+import { demoLoginAction, loginAction } from '@/services/auth.service';
+
+const initialAuthState = {
+  success: false,
+  message: '',
+};
 
 
 export default function LoginPage() {
   const [mounted, setMounted] = React.useState(false);
   const { resolvedTheme } = useTheme();
   const isDark = mounted && resolvedTheme === 'dark';
+  const [state, formAction, isPending] = React.useActionState(loginAction, initialAuthState);
+  const [, demoFormAction, isDemoPending] = React.useActionState(demoLoginAction, initialAuthState);
 
   React.useEffect(() => {
     const frame = window.requestAnimationFrame(() => setMounted(true));
@@ -59,12 +67,13 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form className="space-y-3">
+            <form action={formAction} className="space-y-3">
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <Mail className="h-4.5 w-4.5 text-zinc-400" />
                 </div>
                 <input
+                  name="email"
                   type="email"
                   className={`block w-full border py-2.5 pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-zinc-400 focus:ring-2 focus:ring-purple-500/20 ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-100 focus:border-purple-500 dark:placeholder:text-zinc-500' : 'border-zinc-300 bg-white text-zinc-950 focus:border-purple-500'}`}
                   placeholder="Email Address"
@@ -77,6 +86,7 @@ export default function LoginPage() {
                   <Lock className="h-4.5 w-4.5 text-zinc-400" />
                 </div>
                 <input
+                  name="password"
                   type="password"
                   className={`block w-full border py-2.5 pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-zinc-400 focus:ring-2 focus:ring-purple-500/20 ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-100 focus:border-purple-500 dark:placeholder:text-zinc-500' : 'border-zinc-300 bg-white text-zinc-950 focus:border-purple-500'}`}
                   placeholder="Password"
@@ -86,7 +96,7 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between gap-3 text-[11px] sm:text-sm">
                 <label className={`flex cursor-pointer items-center gap-2 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                  <input type="checkbox" className="size-4 border-zinc-300 text-purple-600 focus:ring-purple-500 dark:border-zinc-700" />
+                  <input name="rememberMe" type="checkbox" className="size-4 border-zinc-300 text-purple-600 focus:ring-purple-500 dark:border-zinc-700" />
                   Remember me
                 </label>
                 <a href="#" className={`font-medium transition-colors ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'}`}>
@@ -97,17 +107,26 @@ export default function LoginPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="submit"
-                  className={`w-full border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 focus:ring-2 focus:ring-purple-500/30 ${isDark ? 'border-purple-500 bg-purple-500 text-zinc-950 hover:bg-purple-400' : 'border-purple-600 bg-purple-600 text-white hover:bg-purple-700'}`}
+                  disabled={isPending}
+                  className={`w-full border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 focus:ring-2 focus:ring-purple-500/30 disabled:cursor-not-allowed disabled:opacity-70 ${isDark ? 'border-purple-500 bg-purple-500 text-zinc-950 hover:bg-purple-400' : 'border-purple-600 bg-purple-600 text-white hover:bg-purple-700'}`}
                 >
-                  Sign In
+                  {isPending ? 'Signing in...' : 'Sign In'}
                 </button>
-                <Link
-                  href="/dashboard"
-                  className={`inline-flex w-full items-center justify-center border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:border-purple-300 ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-purple-400 dark:hover:border-purple-500/60' : 'border-zinc-300 bg-white text-zinc-700 hover:text-purple-600'}`}
+                <button
+                  type="submit"
+                  formAction={demoFormAction}
+                  disabled={isDemoPending}
+                  className={`inline-flex w-full items-center justify-center border px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:border-purple-300 disabled:cursor-not-allowed disabled:opacity-70 ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-purple-400 dark:hover:border-purple-500/60' : 'border-zinc-300 bg-white text-zinc-700 hover:text-purple-600'}`}
                 >
-                  Demo Login
-                </Link>
+                  {isDemoPending ? 'Loading demo...' : 'Demo Login'}
+                </button>
               </div>
+
+              {state.message ? (
+                <p className={`text-sm ${state.success ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  {state.message}
+                </p>
+              ) : null}
             </form>
 
             <p className={`text-center text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>

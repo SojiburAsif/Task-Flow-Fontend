@@ -1,11 +1,37 @@
-export default function AdminDashboardPage() {
+import { DashboardOverview } from "@/components/Dashboard/dashboard-overview";
+import { getDashboardStats } from "@/services/dashboard.service";
+
+export default async function AdminDashboardPage() {
+  const stats = await getDashboardStats();
+
   return (
-    <section className="rounded-3xl border border-border/60 bg-background p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Admin panel</p>
-      <h2 className="mt-2 text-2xl font-semibold text-foreground">Administration tools</h2>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-        Review system health, control permissions, and oversee the full workspace from one place.
-      </p>
-    </section>
-  )
+    <DashboardOverview
+      title="Administration tools"
+      description="Review system health, control permissions, and oversee the full workspace from one place."
+      roleLabel="Admin panel"
+      stats={stats}
+      links={[
+        {
+          label: "Summary overview",
+          href: "#summary",
+          description: "Open the live counters for projects, tasks, and overdue items.",
+        },
+        {
+          label: "Priority report",
+          href: "#priority",
+          description: "Review whether urgent work is growing or stable.",
+        },
+        {
+          label: "Project progress",
+          href: "#progress",
+          description: "Inspect the chart for the latest delivery movement.",
+        },
+        {
+          label: "Team member view",
+          href: "/dashboard/my-tasks",
+          description: "Open the task-centric screen used by contributors.",
+        },
+      ]}
+    />
+  );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerEnv } from "./lib/env"; 
-import { jwtUtils } from "./lib/jwtUtils";   
 
+import { getProxyEnv } from "./lib/env";
+import { jwtUtils } from "./lib/jwtUtils";
 
 export type ProjectRole = "Admin" | "ProjectManager" | "TeamMember";
 
@@ -11,6 +11,11 @@ type AuthUserInfo = {
     name?: string;
 };
 
+type AuthTokens = {
+    accessToken?: string;
+    refreshToken?: string;
+    sessionToken?: string;
+};
 
 const normalizeRole = (role: unknown): ProjectRole | null => {
     if (role === "Admin" || role === "ADMIN") return "Admin";
@@ -19,13 +24,11 @@ const normalizeRole = (role: unknown): ProjectRole | null => {
     return null;
 };
 
-// ৩. কোনো রোল মিসিং থাকলে বা আন-অথরাইজড হলে ফলব্যাক ড্যাশবোর্ড রুট
 const getFallbackDashboardRoute = (role: ProjectRole | null) => {
     void role;
     return "/dashboard";
 };
 
-// ৪. লেগাসি বা ওল্ড রোল-প্রিফিক্সড ইউআরএল হ্যান্ডেল করার জন্য
 const resolveDashboardAliasOwner = (pathname: string): ProjectRole | null => {
     if (pathname.startsWith("/admin/dashboard")) return "Admin";
     if (pathname.startsWith("/manager/dashboard")) return "ProjectManager";
@@ -33,34 +36,95 @@ const resolveDashboardAliasOwner = (pathname: string): ProjectRole | null => {
     return null;
 };
 
-// ৫. রাউটের মালিকানা বা প্রটেকশন টাইপ ডিটেক্ট করা (কাস্টম বা সিম্পল চেকিং)
 const getRouteType = (pathname: string) => {
-    const authRoutes = ["/login", "/signup"];
+    const authRoutes = ["/login", "/register", "/signup"];
     const publicRoutes = ["/", "/favicon.ico"];
-    
+
     if (authRoutes.includes(pathname)) return "AUTH";
     if (publicRoutes.some(route => pathname === route || pathname.startsWith("/_next"))) return "PUBLIC";
-    return "PROTECTED"; // বাকি সব রুট যেমন /dashboard, /projects, /tasks প্রটেক্টেড
+    return "PROTECTED";
 };
 
-// ৬. ব্যাকএন্ড থেকে কারেন্ট ইউজারের সেশন ভেরিফাই করার ফাংশন
+const buildCookieHeader = (tokens: AuthTokens) => {
+    const cookieParts = [
+        tokens.accessToken ? `accessToken=${tokens.accessToken}` : "",
+        tokens.refreshToken ? `refreshToken=${tokens.refreshToken}` : "",
+        tokens.sessionToken ? `sessionToken=${tokens.sessionToken}` : "",
+    ].filter(Boolean);
+
+    return cookieParts.join("; ");
+};
+
+const applyAuthCookies = (response: NextResponse, tokens?: AuthTokens | null) => {
+    if (!tokens) {
+        return response;
+    }
+
+    if (tokens.accessToken) {
+        response.cookies.set("accessToken", tokens.accessToken, { httpOnly: true, path: "/", sameSite: "lax" });
+    }
+
+    if (tokens.refreshToken) {
+        response.cookies.set("refreshToken", tokens.refreshToken, { httpOnly: true, path: "/", sameSite: "lax" });
+    }
+
+    if (tokens.sessionToken) {
+        response.cookies.set("sessionToken", tokens.sessionToken, { httpOnly: true, path: "/", sameSite: "lax" });
+    }
+
+    return response;
+};
+
+const refreshAuthTokensFromApi = async (
+    refreshToken?: string,
+    sessionToken?: string
+): Promise<AuthTokens | null> => {
+    if (!refreshToken) {
+        return null;
+    }
+
+    try {
+        const proxyEnv = getProxyEnv();
+        const response = await fetch(`${proxyEnv.BASE_API_URL}/auth/refresh-token`, {
+            method: "GET",
+            headers: {
+                Cookie: buildCookieHeader({ refreshToken, sessionToken }),
+            },
+            cache: "no-store",
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const payload = await response.json();
+
+        if (!payload?.success || !payload?.data?.accessToken || !payload?.data?.refreshToken) {
+            return null;
+        }
+
+        return {
+            accessToken: payload.data.accessToken,
+            refreshToken: payload.data.refreshToken,
+            sessionToken: payload.data.sessionToken ?? sessionToken,
+        };
+    } catch {
+        return null;
+    }
+};
+
 const getUserInfoFromApi = async (
-    cookieHeader?: string,
     accessToken?: string,
+    refreshToken?: string,
     sessionToken?: string
 ): Promise<AuthUserInfo | null> => {
     try {
-        const serverEnv = getServerEnv();
-        const fallbackCookieParts: string[] = [];
-        if (accessToken) fallbackCookieParts.push(`accessToken=${accessToken}`);
-        if (sessionToken) fallbackCookieParts.push(`better-auth.session_token=${sessionToken}`);
-
-        const finalCookieHeader = cookieHeader || fallbackCookieParts.join("; ");
+        const proxyEnv = getProxyEnv();
+        const finalCookieHeader = buildCookieHeader({ accessToken, refreshToken, sessionToken });
 
         if (!finalCookieHeader) return null;
 
-        // আপনার পোস্টম্যান গাইড অনুযায়ী সেন্ট্রাল অথ এপিআই বেস (/api/auth/profile বা /api/auth/me)
-        const response = await fetch(`${serverEnv.BASE_API_URL}/auth/me`, {
+        const response = await fetch(`${proxyEnv.BASE_API_URL}/auth/me`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -74,7 +138,7 @@ const getUserInfoFromApi = async (
         if (!response.ok) return null;
 
         const payload = await response.json();
-        return payload?.data ?? null; // ব্যাকএন্ড রেসপন্স স্ট্রাকচার অনুযায়ী ডাটা রিটার্ন
+        return payload?.data ?? null;
     } catch {
         return null;
     }
@@ -82,28 +146,36 @@ const getUserInfoFromApi = async (
 
 export async function proxy(request: NextRequest) {
     try {
-        const serverEnv = getServerEnv();
+        const proxyEnv = getProxyEnv();
         const { pathname } = request.nextUrl;
-        
-        // কুকি থেকে টোকেন রিড করা
-        const accessToken = request.cookies.get("accessToken")?.value;
-        const sessionToken = request.cookies.get("better-auth.session_token")?.value;
-        const rawCookieHeader = request.headers.get("cookie") || undefined;
 
-        // এক্সেস টোকেন ভেরিফাই করা
-        const verifiedAccessToken = accessToken
-            ? jwtUtils.verifyToken(accessToken, serverEnv.JWT_ACCESS_SECRET)
+        let accessToken = request.cookies.get("accessToken")?.value;
+        let refreshToken = request.cookies.get("refreshToken")?.value;
+        let sessionToken = request.cookies.get("sessionToken")?.value;
+        let refreshedTokens: AuthTokens | null = null;
+
+        let verifiedAccessToken = accessToken
+            ? jwtUtils.verifyToken(accessToken, proxyEnv.JWT_ACCESS_SECRET)
             : { success: false as const, data: null };
+
+        if (!verifiedAccessToken.success && refreshToken) {
+            refreshedTokens = await refreshAuthTokensFromApi(refreshToken, sessionToken);
+
+            if (refreshedTokens?.accessToken && refreshedTokens.refreshToken) {
+                accessToken = refreshedTokens.accessToken;
+                refreshToken = refreshedTokens.refreshToken;
+                sessionToken = refreshedTokens.sessionToken ?? sessionToken;
+                verifiedAccessToken = jwtUtils.verifyToken(accessToken, proxyEnv.JWT_ACCESS_SECRET);
+            }
+        }
 
         const isValidAccessToken = Boolean(verifiedAccessToken.success);
         const decodedAccessToken = verifiedAccessToken.success ? verifiedAccessToken.data : null;
-        
-        // এপিআই থেকে ইউজার ডেটা আনা
+
         const authUserInfo = (accessToken || sessionToken)
-            ? await getUserInfoFromApi(rawCookieHeader, accessToken, sessionToken)
+            ? await getUserInfoFromApi(accessToken, refreshToken, sessionToken)
             : null;
 
-        // রোল ডিটেক্ট করা
         const userRole =
             normalizeRole(decodedAccessToken?.role) ||
             normalizeRole(authUserInfo?.role) ||
@@ -112,31 +184,29 @@ export async function proxy(request: NextRequest) {
         const isAuthenticated = isValidAccessToken || Boolean(authUserInfo) || Boolean(sessionToken);
         const routeType = getRouteType(pathname);
         const dashboardAliasOwner = resolveDashboardAliasOwner(pathname);
+        const withAuthCookies = (response: NextResponse) => applyAuthCookies(response, refreshedTokens);
 
-        // রুল ১: লগইন থাকা অবস্থায় কোনো ইউজার যেন আবার /login বা /signup পেজে না যেতে পারে
         if (routeType === "AUTH" && isAuthenticated) {
-            return NextResponse.redirect(new URL(getFallbackDashboardRoute(userRole), request.url));
+            return withAuthCookies(NextResponse.redirect(new URL(getFallbackDashboardRoute(userRole), request.url)));
         }
 
-        // রুল ২: ওল্ড রোল-ভিত্তিক ড্যাশবোর্ড ইউআরএলগুলোকে ইউনিফাইড /dashboard রুটে রিডাইরেক্ট করা
         if (dashboardAliasOwner) {
             if (!isAuthenticated || !userRole) {
-                return NextResponse.redirect(new URL("/login", request.url));
+                return withAuthCookies(NextResponse.redirect(new URL("/login", request.url)));
             }
-            return NextResponse.redirect(new URL("/dashboard", request.url));
+
+            return withAuthCookies(NextResponse.redirect(new URL("/dashboard", request.url)));
         }
 
-        // রুল ৩: পাবলিক রুট হলে সরাসরি অ্যাক্সেস দেওয়া
         if (routeType === "PUBLIC") {
-            return NextResponse.next();
+            return withAuthCookies(NextResponse.next());
         }
 
-        // রুল ৪: প্রটেক্টেড রুট (যেমন ড্যাশবোর্ড) কিন্তু ইউজার লগইন নেই -> রিডাইরেক্ট টু লগইন
         if (routeType === "PROTECTED" && !isAuthenticated) {
-            return NextResponse.redirect(new URL("/login", request.url));
+            return withAuthCookies(NextResponse.redirect(new URL("/login", request.url)));
         }
 
-        return NextResponse.next();
+        return withAuthCookies(NextResponse.next());
     } catch (error) {
         console.error("Error in proxy middleware:", error);
         return NextResponse.next();
