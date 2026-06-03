@@ -7,6 +7,7 @@ import Logo from '@/components/shared/logo/logo';
 import { useTheme } from '@/components/provider/theme-provider';
 import { registerAction } from '@/services/auth.service';
 import { Role } from '@/app/constants/role';
+import { uploadToImgbb } from '@/lib/imageUpload.utils';
 
 const initialAuthState = {
   success: false,
@@ -19,6 +20,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = React.useState<string | null>(null);
+  const [imageUploadState, setImageUploadState] = React.useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   const previewUrlRef = React.useRef<string | null>(null);
   const { resolvedTheme } = useTheme();
   const isDark = mounted && resolvedTheme === 'dark';
@@ -131,11 +135,10 @@ export default function RegisterPage() {
                   <div className="flex items-center gap-3">
                     <Upload className="h-4.5 w-4.5 shrink-0 text-zinc-400" />
                     <input
-                      name="avatar"
                       type="file"
                       accept="image/*"
                       className={`block w-full text-sm file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold ${isDark ? 'text-zinc-300 file:text-purple-400' : 'text-zinc-700 file:text-purple-600'}`}
-                      onChange={(event) => {
+                      onChange={async (event) => {
                         const file = event.currentTarget.files?.[0];
 
                         if (!file) {
@@ -144,6 +147,8 @@ export default function RegisterPage() {
                             previewUrlRef.current = null;
                           }
                           setImagePreview(null);
+                          setUploadedImageUrl(null);
+                          setImageUploadState('');
                           return;
                         }
 
@@ -153,9 +158,25 @@ export default function RegisterPage() {
                         }
                         previewUrlRef.current = nextUrl;
                         setImagePreview(nextUrl);
+
+                        setIsUploadingImage(true);
+                        setImageUploadState('Uploading image...');
+
+                        try {
+                          const uploadedUrl = await uploadToImgbb(file);
+                          setUploadedImageUrl(uploadedUrl);
+                          setImageUploadState('Image uploaded and ready to submit.');
+                        } catch (error) {
+                          setUploadedImageUrl(null);
+                          setImageUploadState(error instanceof Error ? error.message : 'Image upload failed');
+                        } finally {
+                          setIsUploadingImage(false);
+                        }
                       }}
                     />
                   </div>
+
+                  <input type="hidden" name="image" value={uploadedImageUrl ?? ''} />
 
                   {imagePreview ? (
                     <div className={`flex items-center gap-3 border p-2 ${isDark ? 'border-zinc-700 bg-zinc-950/50' : 'border-zinc-200 bg-zinc-50'}`}>
@@ -167,9 +188,15 @@ export default function RegisterPage() {
                       </div>
                     </div>
                   ) : null}
+
+                  {imageUploadState ? (
+                    <p className={`text-xs ${imageUploadState.includes('failed') || imageUploadState.includes('Failed') ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      {imageUploadState}
+                    </p>
+                  ) : null}
                 </div>
                 <p className={`mt-1.5 text-xs leading-5 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                  Upload an image now and we will send it to ImgBB during registration.
+                  {isUploadingImage ? 'Uploading image to ImgBB...' : 'Upload an image now and we will send it to ImgBB during registration.'}
                 </p>
               </div>
 

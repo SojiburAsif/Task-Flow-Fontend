@@ -1,14 +1,44 @@
-import { Route } from "@/types/Router.type";
-import { ClipboardList, Home, Users, Bell } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Briefcase, 
+  CheckSquare, 
+  Settings 
+} from "lucide-react";
 
-export const TeamMemberRouters: Route[] = [
-    {
-        title: "Member Workspace",
-        items: [
-            { title: "Home", url: "/dashboard", icon: Home },
-            { title: "My Tasks", url: "/dashboard/my-tasks", icon: ClipboardList },
-            { title: "Team Tasks", url: "/dashboard/team-tasks", icon: Users },
-            { title: "Notifications", url: "/dashboard/notifications", icon: Bell },
-        ],
-    }
+export const TeamMemberRouters = [
+  {
+    title: "Overview",
+    items: [
+      {
+        title: "My Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: "My Workspace",
+    items: [
+      {
+        title: "Assigned Projects",
+        url: "/dashboard/my-projects",
+        icon: Briefcase,
+      },
+      {
+        title: "My Tasks Board",
+        url: "/dashboard/my-tasks",
+        icon: CheckSquare,
+      },
+    ],
+  },
+  {
+    title: "Preferences",
+    items: [
+      {
+        title: "Profile Settings",
+        url: "/dashboard/settings",
+        icon: Settings,
+      },
+    ],
+  },
 ];

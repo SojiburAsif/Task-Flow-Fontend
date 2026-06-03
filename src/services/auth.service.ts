@@ -183,6 +183,7 @@ export const registerAction = async (prevState: AuthActionState = initialAuthSta
 		password: readFormValue(formData, "password"),
 		confirmPassword: readFormValue(formData, "confirmPassword"),
 		role: readFormValue(formData, "role") || "TeamMember",
+		image: readFormValue(formData, "image") || undefined,
 		rememberMe: readRememberMe(formData),
 	});
 
@@ -190,35 +191,14 @@ export const registerAction = async (prevState: AuthActionState = initialAuthSta
 		return getErrorState(parsed.error.issues[0]?.message ?? "Please provide valid account details");
 	}
 
-	const buildRegisterPayload = (data: typeof parsed.data, image?: string) => {
+	const buildRegisterPayload = (data: typeof parsed.data) => {
 		const payload = { ...(data as Record<string, unknown>) };
 		delete payload.confirmPassword;
-
-		if (image) {
-			payload.image = image;
-		}
 
 		return payload;
 	};
 
 	try {
-		// handle optional avatar upload
-		const avatar = formData.get("avatar");
-		if (avatar && avatar instanceof File && avatar.size > 0) {
-			try {
-				const imageUrl = await uploadToImgbb(avatar);
-				// build payload object and attach image url
-				const payload = buildRegisterPayload(parsed.data, imageUrl);
-				const result = await requestAuth("/register", payload);
-				const remember = (payload as Record<string, unknown>).rememberMe as boolean;
-				await setAuthCookies(result, remember);
-				redirect("/dashboard");
-				return;
-			} catch (err) {
-				return getErrorState(err instanceof Error ? err.message : "Image upload failed");
-			}
-		}
-
 		const result = await requestAuth("/register", buildRegisterPayload(parsed.data));
 		await setAuthCookies(result, parsed.data.rememberMe);
 		redirect("/dashboard");

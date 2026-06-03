@@ -12,6 +12,8 @@ export default function Logo() {
         alt={siteConfig.name}
         width={54}
         height={54}
+        priority
+        loading="eager"
         className="h-13 w-auto object-contain"
       />
       <span className="text-white transition-colors">

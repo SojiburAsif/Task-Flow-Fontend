@@ -1,22 +1,56 @@
-import { Route } from "@/types/Router.type";
-import { CalendarCheck, ClipboardList, CreditCard, Home, Settings, Sparkles, Stethoscope, UserCog, Users, UserSquare2, Bell } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  FolderGit2, 
+  ListTodo, 
+  Users2, 
+  History, 
+  Settings 
+} from "lucide-react";
 
-export const AdminRouters: Route[] = [
-    {
-        title: "Admin Workspace",
-        items: [
-            { title: "Home", url: "/dashboard", icon: Home },
-            { title: "Create Provider", url: "/dashboard/create-provider", icon: Settings },
-            { title: "All Users", url: "/dashboard/users", icon: Users },
-            { title: "All Providers", url: "/dashboard/providers", icon: UserSquare2 },
-            { title: "All Services", url: "/dashboard/services", icon: Stethoscope },
-            { title: "All Bookings", url: "/dashboard/bookings", icon: CalendarCheck },
-            { title: "Specialties", url: "/dashboard/specialties", icon: Sparkles },
-            { title: "Payments", url: "/dashboard/payments", icon: CreditCard },
-            { title: "Reviews & Ratings", url: "/dashboard/reviewsAdmin", icon: ClipboardList },
-            { title: "Notifications", url: "/dashboard/admin-notifications", icon: Bell },
-            { title: "Create Admin", url: "/dashboard/create-admin", icon: UserCog },
-            { title: "All Admins", url: "/dashboard/AllAdmin", icon: UserCog }
-        ],
-    }
+export const AdminRouters = [
+  {
+    title: "Overview",
+    items: [
+      {
+        title: "Global Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: "Management",
+    items: [
+      {
+        title: "All Projects",
+        url: "/dashboard/AdminProjects",
+        icon: FolderGit2,
+      },
+      {
+        title: "All Tasks",
+        url: "/dashboard/AdminTasks",
+        icon: ListTodo,
+      },
+      {
+        title: "Manage Members",
+        url: "/dashboard/members",
+        icon: Users2,
+      },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      {
+        title: "Activity Logs",
+        url: "/dashboard/AdminActivities",
+        icon: History,
+      },
+      {
+        title: "Settings",
+        url: "/dashboard/AdminSettings",
+        icon: Settings,
+      },
+    ],
+  },
 ];

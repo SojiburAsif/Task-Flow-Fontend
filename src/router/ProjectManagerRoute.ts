@@ -1,13 +1,56 @@
-import { Route } from "@/types/Router.type";
-import { Home, Settings, Users } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  FolderGit2, 
+  ListTodo, 
+  Users, 
+  History, 
+  Settings 
+} from "lucide-react";
 
-export const ProjectManagerRouters: Route[] = [
-    {
-        title: "Manager Workspace",
-        items: [
-            { title: "Home", url: "/dashboard", icon: Home },
-            { title: "Create Provider", url: "/dashboard/create-provider", icon: Settings },
-            { title: "All Users", url: "/dashboard/users", icon: Users },
-        ],
-    }
+export const ProjectManagerRouters = [
+  {
+    title: "Overview",
+    items: [
+      {
+        title: "Manager Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: "Workspaces",
+    items: [
+      {
+        title: "My Projects",
+        url: "/dashboard/projects",
+        icon: FolderGit2,
+      },
+      {
+        title: "Task Management",
+        url: "/dashboard/tasks",
+        icon: ListTodo,
+      },
+      {
+        title: "My Project Teams",
+        url: "/dashboard/teams",
+        icon: Users,
+      },
+    ],
+  },
+  {
+    title: "Audit & Config",
+    items: [
+      {
+        title: "Project Logs",
+        url: "/dashboard/activities",
+        icon: History,
+      },
+      {
+        title: "Account Settings",
+        url: "/dashboard/settings",
+        icon: Settings,
+      },
+    ],
+  },
 ];
