@@ -38,10 +38,17 @@ const resolveDashboardAliasOwner = (pathname: string): ProjectRole | null => {
 
 const getRouteType = (pathname: string) => {
     const authRoutes = ["/login", "/register", "/signup"];
-    const publicRoutes = ["/", "/favicon.ico"];
+    const publicRoutes = ["/", "/favicon.ico", "/logo.png"];
+    const staticAssets = [".svg", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".webp"];
 
     if (authRoutes.includes(pathname)) return "AUTH";
-    if (publicRoutes.some(route => pathname === route || pathname.startsWith("/_next"))) return "PUBLIC";
+    if (
+        publicRoutes.includes(pathname) ||
+        pathname.startsWith("/_next") ||
+        staticAssets.some(ext => pathname.endsWith(ext))
+    ) {
+        return "PUBLIC";
+    }
     return "PROTECTED";
 };
 

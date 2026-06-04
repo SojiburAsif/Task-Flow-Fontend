@@ -32,6 +32,11 @@ export const ProjectManagerRouters = [
         icon: ListTodo,
       },
       {
+        title: "Create New Project",
+        url: "/dashboard/CreateProject",
+        icon: FolderGit2,
+      },
+      {
         title: "My Project Teams",
         url: "/dashboard/teams",
         icon: Users,

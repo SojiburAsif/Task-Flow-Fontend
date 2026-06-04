@@ -11,11 +11,13 @@ export default async function DashboardLayout({
   admin,
   projectManager,
   teamMember,
+  modal,
 }: {
   children: React.ReactNode;
   admin: React.ReactNode;
   projectManager: React.ReactNode;
   teamMember: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const user = await getCurrentUser();
 
@@ -55,6 +57,7 @@ export default async function DashboardLayout({
           {/* Welcome card removed per design request */}
 
           {renderSlot}
+          {modal}
         </main>
       </SidebarInset>
     </SidebarProvider>

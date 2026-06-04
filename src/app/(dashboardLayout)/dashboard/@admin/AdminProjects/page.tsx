@@ -1,7 +1,19 @@
-import React from 'react'
+import React from "react";
+import { getProjects } from "@/services/project.service";
+import { getCurrentUser } from "@/lib/currentUser";
+import { ProjectList } from "@/components/Dashboard/ProjectList";
 
-export default function AllProjectsAdmin() {
+export default async function AllProjectsAdmin() {
+  const projects = await getProjects();
+  const user = await getCurrentUser();
+
   return (
-    <div>AllProjectsAdmin</div>
-  )
+    <div className="p-4 sm:p-6 lg:p-8">
+      <ProjectList 
+        projects={projects || []} 
+        role={user?.role || "Admin"} 
+        title="Admin Projects Control" 
+      />
+    </div>
+  );
 }
