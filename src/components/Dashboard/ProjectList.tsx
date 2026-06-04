@@ -31,8 +31,8 @@ export const ProjectList = ({ projects, role, users, title = "Projects" }: Proje
       await deleteProject(id);
       toast.success("Project deleted successfully");
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete project");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete project");
     }
   };
 
@@ -98,7 +98,7 @@ export const ProjectList = ({ projects, role, users, title = "Projects" }: Proje
           {view === "card" ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-10">
               {projects.map((p) => (
-                <ProjectCard key={p.id} project={p} role={role} users={users} onDelete={handleDelete} />
+                <ProjectCard key={p.id} project={p} role={role} onDelete={handleDelete} />
               ))}
             </div>
           ) : (

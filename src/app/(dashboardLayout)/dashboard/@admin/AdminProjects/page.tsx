@@ -12,6 +12,7 @@ export default async function AllProjectsAdmin() {
       <ProjectList 
         projects={projects || []} 
         role={user?.role || "Admin"} 
+        users={[]}
         title="Admin Projects Control" 
       />
     </div>

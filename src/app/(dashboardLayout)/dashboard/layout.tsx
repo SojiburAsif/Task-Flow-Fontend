@@ -52,7 +52,7 @@ export default async function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={userInfo} />
-      <SidebarInset className="min-h-svh bg-zinc-50 text-zinc-950 transition-colors dark:bg-black dark:text-zinc-50">
+      <SidebarInset className="min-h-screen overflow-auto bg-zinc-50 text-zinc-950 transition-colors dark:bg-black dark:text-zinc-50">
         <main className="">
           {/* Welcome card removed per design request */}
 

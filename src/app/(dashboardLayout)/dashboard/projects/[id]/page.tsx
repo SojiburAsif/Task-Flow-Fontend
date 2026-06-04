@@ -1,7 +1,7 @@
 import React from "react";
 import { getProjects, updateProject } from "@/services/project.service";
 import { revalidatePath } from "next/cache";
-import { Calendar, User, Users, Clock, CheckCircle2, AlertCircle, ArrowLeft, Edit2 } from "lucide-react";
+import { Calendar, User, Users, CheckCircle2, AlertCircle, ArrowLeft, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

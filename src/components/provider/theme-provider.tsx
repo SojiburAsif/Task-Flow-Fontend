@@ -52,17 +52,17 @@ export function ThemeProvider({
   attribute?: string;
   enableSystem?: boolean;
 }>) {
-  const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
+  const [theme, setThemeState] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return defaultTheme;
+    }
+
+    const storedTheme = window.localStorage.getItem("theme") as Theme | null;
+    return storedTheme === "light" || storedTheme === "dark" || storedTheme === "system" ? storedTheme : defaultTheme;
+  });
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
   React.useEffect(() => {
-    const storedTheme = window.localStorage.getItem("theme") as Theme | null;
-
-    if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-      setThemeState(storedTheme);
-      return;
-    }
-
     applyTheme(defaultTheme, disableTransitionOnChange);
   }, [defaultTheme, disableTransitionOnChange]);
 

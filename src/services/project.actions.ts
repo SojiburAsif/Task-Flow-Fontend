@@ -97,7 +97,7 @@ export const deleteProject = async (id: string) => {
     throw new Error(message);
   }
 
-  return true;
+  return;
 };
 
 export const updateProjectAction = async (formData: FormData) => {

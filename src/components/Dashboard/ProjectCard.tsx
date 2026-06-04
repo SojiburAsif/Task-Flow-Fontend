@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { FolderOpen, Calendar, Clock, User, ArrowUpRight, Edit2, Trash2, Users } from "lucide-react";
+import { Calendar, Clock, User, ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import { type ProjectRecord } from "@/services/project.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

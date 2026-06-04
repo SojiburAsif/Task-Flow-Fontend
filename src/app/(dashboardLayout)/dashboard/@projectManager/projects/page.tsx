@@ -12,6 +12,7 @@ export default async function ProjectsPage() {
       <ProjectList 
         projects={projects || []} 
         role={user?.role || "ProjectManager"} 
+        users={[]}
         title="Project Management" 
       />
     </div>
