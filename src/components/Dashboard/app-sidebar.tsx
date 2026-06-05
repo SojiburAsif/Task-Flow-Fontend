@@ -70,7 +70,7 @@ export function AppSidebar({
   return (
     <Sidebar
       {...props}
-      className="relative overflow-hidden border-r border-slate-200 bg-white text-black transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.10),transparent_42%)] before:content-[''] dark:border-zinc-800 dark:bg-black dark:text-white dark:before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.16),transparent_42%)]"
+      className="sticky top-0 h-screen overflow-auto border-r border-slate-200 bg-white text-black transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.10),transparent_42%)] before:content-[''] dark:border-zinc-800 dark:bg-black dark:text-white dark:before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.16),transparent_42%)]"
     >
      
       <SidebarHeader className="border-b border-slate-100 bg-white px-5 py-6 text-black dark:border-zinc-800 dark:bg-black dark:text-white">

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { authCookieNames } from "@/lib/authUtils";
 import { getProxyEnv } from "@/lib/env";
 import { uploadToImgbb } from "@/lib/imageUpload.utils";
+import { updateTask } from "@/services/task.service";
 
 const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionToken?: string) => {
 	const parts = [
@@ -19,6 +20,18 @@ const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionT
 
 const allowedStatuses = ["Todo", "InProgress", "Completed"] as const;
 
+const revalidateTaskViews = (taskId: string, returnTo?: string | null) => {
+	revalidatePath("/dashboard/my-tasks");
+	revalidatePath("/dashboard/tasks");
+	revalidatePath("/dashboard/AdminTasks");
+	revalidatePath(`/dashboard/tasks/${taskId}`);
+	revalidatePath(`/dashboard/tasks/${taskId}/edit`);
+
+	if (returnTo?.startsWith("/dashboard")) {
+		revalidatePath(returnTo);
+	}
+};
+
 export const updateTaskStatusAction = async (
 	prevState: { success: boolean; message: string } = { success: false, message: "" },
 	formData?: FormData,
@@ -31,7 +44,7 @@ export const updateTaskStatusAction = async (
 
 	const id = formData.get("id")?.toString().trim();
 	const status = formData.get("status")?.toString().trim();
-	const assignedToId = formData.get("assignedToId")?.toString().trim() || undefined;
+	const assignedToId = formData.has("assignedToId") ? formData.get("assignedToId")?.toString().trim() || null : undefined;
 
 	if (!id) {
 		return { success: false, message: "Task ID is required." };
@@ -41,48 +54,95 @@ export const updateTaskStatusAction = async (
 		return { success: false, message: "Please select a valid task status." };
 	}
 
-	const cookieStore = await cookies();
-	const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
-	const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
-	const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+	try {
+		await updateTask(id, {
+			status: status as "Todo" | "InProgress" | "Completed",
+			...(assignedToId !== undefined ? { assignedToId } : {}),
+		});
+		revalidateTaskViews(id, formData.get("returnTo")?.toString() ?? null);
+		return { success: true, message: "Task updated successfully" };
+	} catch (error) {
+		return { success: false, message: error instanceof Error ? error.message : "Failed to update task" };
+	}
+};
 
-	const proxyEnv = getProxyEnv();
-	const bodyPayload: Record<string, unknown> = { status };
-	if (assignedToId) bodyPayload.assignedToId = assignedToId;
+export const updateTaskAction = async (
+	prevState: { success: boolean; message: string } = { success: false, message: "" },
+	formData?: FormData,
+) => {
+	void prevState;
 
-	const res = await fetch(`${proxyEnv.BASE_API_URL}/tasks/${id}`, {
-		method: "PATCH",
-		headers: {
-			"Content-Type": "application/json",
-			Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
-			...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-			...(sessionToken ? { "x-session-token": sessionToken } : {}),
-		},
-		body: JSON.stringify(bodyPayload),
-		cache: "no-store",
-	});
-
-	if (!res.ok) {
-		let body: unknown = null;
-		try {
-			body = await res.json();
-		} catch {
-			try {
-				body = await res.text();
-			} catch {
-				body = null;
-			}
-		}
-
-		const statusInfo = `HTTP ${res.status} ${res.statusText}`;
-		const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
-		return { success: false, message: bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to update task` };
+	if (!formData) {
+		return { success: false, message: "No form data provided" };
 	}
 
-	revalidatePath("/dashboard/my-tasks");
-	revalidatePath("/dashboard/tasks");
-	revalidatePath("/dashboard/AdminTasks");
-	return { success: true, message: "Task updated successfully" };
+	const id = formData.get("id")?.toString().trim();
+	const returnTo = formData.get("returnTo")?.toString().trim() || undefined;
+	const title = formData.has("title") ? formData.get("title")?.toString().trim() || "" : undefined;
+	const description = formData.has("description") ? formData.get("description")?.toString().trim() || null : undefined;
+	const dueDateRaw = formData.has("dueDate") ? formData.get("dueDate")?.toString().trim() || "" : undefined;
+	const priority = formData.has("priority") ? formData.get("priority")?.toString().trim() || undefined : undefined;
+	const status = formData.has("status") ? formData.get("status")?.toString().trim() || undefined : undefined;
+	const assignedToId = formData.has("assignedToId") ? formData.get("assignedToId")?.toString().trim() || null : undefined;
+
+	if (!id) {
+		return { success: false, message: "Task ID is required." };
+	}
+
+	const payload: Record<string, unknown> = {};
+
+	if (title !== undefined) {
+		if (!title) {
+			return { success: false, message: "Task title is required." };
+		}
+
+		payload.title = title;
+	}
+
+	if (description !== undefined) {
+		payload.description = description || null;
+	}
+
+	if (dueDateRaw !== undefined) {
+		if (!dueDateRaw) {
+			return { success: false, message: "Please select a valid deadline." };
+		}
+
+		const parsedDueDate = new Date(dueDateRaw);
+		if (Number.isNaN(parsedDueDate.getTime())) {
+			return { success: false, message: "Please select a valid deadline." };
+		}
+
+		payload.dueDate = parsedDueDate.toISOString();
+	}
+
+	if (priority !== undefined) {
+		payload.priority = priority;
+	}
+
+	if (status !== undefined) {
+		if (!allowedStatuses.includes(status as (typeof allowedStatuses)[number])) {
+			return { success: false, message: "Please select a valid task status." };
+		}
+
+		payload.status = status;
+	}
+
+	if (assignedToId !== undefined) {
+		payload.assignedToId = assignedToId;
+	}
+
+	if (Object.keys(payload).length === 0) {
+		return { success: false, message: "At least one field is required." };
+	}
+
+	try {
+		await updateTask(id, payload as Parameters<typeof updateTask>[1]);
+		revalidateTaskViews(id, returnTo);
+		return { success: true, message: "Task updated successfully" };
+	} catch (error) {
+		return { success: false, message: error instanceof Error ? error.message : "Failed to update task" };
+	}
 };
 
 export const createTaskAction = async (prevState: { success: boolean; message: string } = { success: false, message: "" }, formData: FormData) => {

@@ -12,6 +12,8 @@ export type TaskProject = {
   id: string;
   name: string;
   description?: string | null;
+  status?: string | null;
+  deadline?: string | null;
   createdBy?: { id: string; name?: string | null } | null;
   members?: Array<{ id: string; name?: string | null }> | null;
 };
@@ -30,9 +32,24 @@ export type TaskRecord = {
   updatedAt?: string;
 };
 
+export type TaskUpdatePayload = Partial<{
+  title: string;
+  description: string | null;
+  assignedToId: string | null;
+  dueDate: string;
+  priority: TaskPriorityValue;
+  status: TaskStatusValue;
+  attachments: string[];
+}>;
+
 type TasksResponse = {
   success?: boolean;
   data?: TaskRecord[];
+};
+
+type TaskResponse = {
+  success?: boolean;
+  data?: TaskRecord;
 };
 
 const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionToken?: string) => {
@@ -89,11 +106,11 @@ const fetchTasks = async (path: string): Promise<TaskRecord[] | null> => {
 };
 
 export const getTasks = async (query?: Record<string, string | number | undefined>): Promise<TaskRecord[] | null> => {
-  return fetchTasks(`/tasks${buildQueryString(query)}`);
+  return fetchTasks(`/tasks${buildQueryString({ page: 1, limit: 100, ...query })}`);
 };
 
 export const getMyTasks = async (query?: Record<string, string | number | undefined>): Promise<TaskRecord[] | null> => {
-  return fetchTasks(`/tasks/my${buildQueryString(query)}`);
+  return fetchTasks(`/tasks/my${buildQueryString({ page: 1, limit: 100, ...query })}`);
 };
 
 export const getTaskById = async (id: string): Promise<TaskRecord | null> => {
@@ -122,5 +139,61 @@ export const getTaskById = async (id: string): Promise<TaskRecord | null> => {
     return payload?.success ? payload.data ?? null : null;
   } catch {
     return null;
+  }
+};
+
+export const updateTask = async (id: string, payload: TaskUpdatePayload): Promise<TaskRecord> => {
+  if (!id.trim()) {
+    throw new Error("Task ID is required.");
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
+    const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
+    const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+
+    const proxyEnv = getProxyEnv();
+    const res = await fetch(`${proxyEnv.BASE_API_URL}/tasks/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(sessionToken ? { "x-session-token": sessionToken } : {}),
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      let body: unknown = null;
+      try {
+        body = await res.json();
+      } catch {
+        try {
+          body = await res.text();
+        } catch {
+          body = null;
+        }
+      }
+
+      const statusInfo = `HTTP ${res.status} ${res.statusText}`;
+      const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
+      throw new Error(bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to update task`);
+    }
+
+    const payloadData = (await res.json()) as TaskResponse;
+    if (!payloadData?.success || !payloadData.data) {
+      throw new Error("Failed to update task");
+    }
+
+    return payloadData.data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error("Failed to update task");
   }
 };

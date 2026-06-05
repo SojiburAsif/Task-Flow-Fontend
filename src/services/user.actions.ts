@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { cookies } from "next/headers";
@@ -85,6 +86,57 @@ export async function deleteUserByAdminAction(formData: FormData) {
 
     revalidatePath("/dashboard/members");
     return { success: true, message: "User deleted" };
+  } catch (err) {
+    return { success: false, message: String(err) };
+  }
+}
+
+// Wrappers for useActionState which calls actions with signature (prevState, payload)
+export async function updateUserByAdminAction_fromState(_prevState: any, payload: any) {
+  try {
+    let fd: FormData;
+    if (payload && typeof payload.get === "function") {
+      fd = payload as FormData;
+    } else {
+      fd = new FormData();
+      if (payload && typeof payload === "object") {
+        for (const key of Object.keys(payload)) {
+          const val = (payload as any)[key];
+          if (Array.isArray(val)) {
+            for (const v of val) fd.append(key, String(v));
+          } else if (val !== undefined && val !== null) {
+            fd.append(key, String(val));
+          }
+        }
+      }
+    }
+
+    return await updateUserByAdminAction(fd);
+  } catch (err) {
+    return { success: false, message: String(err) };
+  }
+}
+
+export async function deleteUserByAdminAction_fromState(_prevState: any, payload: any) {
+  try {
+    let fd: FormData;
+    if (payload && typeof payload.get === "function") {
+      fd = payload as FormData;
+    } else {
+      fd = new FormData();
+      if (payload && typeof payload === "object") {
+        for (const key of Object.keys(payload)) {
+          const val = (payload as any)[key];
+          if (Array.isArray(val)) {
+            for (const v of val) fd.append(key, String(v));
+          } else if (val !== undefined && val !== null) {
+            fd.append(key, String(val));
+          }
+        }
+      }
+    }
+
+    return await deleteUserByAdminAction(fd);
   } catch (err) {
     return { success: false, message: String(err) };
   }

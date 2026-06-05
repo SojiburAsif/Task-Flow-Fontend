@@ -1,188 +1,189 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"use server";
+
 import "server-only";
+
 import { cookies } from "next/headers";
 
 import { authCookieNames } from "@/lib/authUtils";
 import { getProxyEnv } from "@/lib/env";
 
 export type ProjectMember = {
-  id: string;
-  name?: string | null;
+	id: string;
+	name?: string | null;
+	email?: string | null;
+	image?: string | null;
+};
+
+export type ProjectOwner = {
+	id: string;
+	name?: string | null;
+	email?: string | null;
+	image?: string | null;
 };
 
 export type ProjectRecord = {
-  id: string;
-  name: string;
-  description?: string | null;
-  deadline?: string | null;
-  status?: string | null;
-  createdBy?: { id: string; name?: string | null } | null;
-  members?: ProjectMember[] | null;
+	id: string;
+	name: string;
+	description: string;
+	deadline: string;
+	status?: string | null;
+	createdAt?: string;
+	updatedAt?: string;
+	createdBy?: ProjectOwner | null;
+	members?: ProjectMember[] | null;
 };
 
-type ProjectsResponse = {
-  success?: boolean;
-  data?: ProjectRecord[];
+export type ProjectPayload = Partial<{
+	name: string;
+	description: string;
+	deadline: string;
+	status: string | null;
+	memberIds: string[];
+}>;
+
+type BackendResponse<T> = {
+	success?: boolean;
+	message?: string;
+	data?: T;
+};
+
+type ProjectListResponse = {
+	success?: boolean;
+	data?: ProjectRecord[];
+};
+
+type ProjectResponse = {
+	success?: boolean;
+	data?: ProjectRecord;
 };
 
 const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionToken?: string) => {
-  const parts = [
-    accessToken ? `${authCookieNames.accessToken}=${accessToken}` : "",
-    refreshToken ? `${authCookieNames.refreshToken}=${refreshToken}` : "",
-    sessionToken ? `${authCookieNames.sessionToken}=${sessionToken}` : "",
-  ].filter(Boolean);
+	const parts = [
+		accessToken ? `${authCookieNames.accessToken}=${accessToken}` : "",
+		refreshToken ? `${authCookieNames.refreshToken}=${refreshToken}` : "",
+		sessionToken ? `${authCookieNames.sessionToken}=${sessionToken}` : "",
+	].filter(Boolean);
 
-  return parts.join("; ");
+	return parts.join("; ");
 };
 
-export const getProjects = async (): Promise<ProjectRecord[] | null> => {
-  try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
-    const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
-    const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+const buildQueryString = (query?: Record<string, string | number | undefined>) => {
+	if (!query) {
+		return "";
+	}
 
-    const proxyEnv = getProxyEnv();
-    const res = await fetch(`${proxyEnv.BASE_API_URL}/projects`, {
-      method: "GET",
-      headers: {
-        Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...(sessionToken ? { "x-session-token": sessionToken } : {}),
-      },
-      cache: "no-store",
-    });
+	const searchParams = new URLSearchParams();
 
-    if (!res.ok) return null;
+	for (const [key, value] of Object.entries(query)) {
+		if (value !== undefined && value !== null && String(value).trim()) {
+			searchParams.set(key, String(value));
+		}
+	}
 
-    const payload = (await res.json()) as ProjectsResponse;
-    return payload?.success && Array.isArray(payload.data) ? payload.data : null;
-  } catch {
-    return null;
-  }
+	const queryString = searchParams.toString();
+	return queryString ? `?${queryString}` : "";
 };
 
-export const createProject = async (payload: {
-  name: string;
-  description: string;
-  deadline?: string | null;
-  status?: string | null;
-  memberIds?: string[] | null;
-}) => {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
-  const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
-  const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+const getAuthHeaders = async () => {
+	const cookieStore = await cookies();
+	const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
+	const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
+	const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
 
-  const proxyEnv = getProxyEnv();
-  const res = await fetch(`${proxyEnv.BASE_API_URL}/projects`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...(sessionToken ? { "x-session-token": sessionToken } : {}),
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    // Try to extract JSON error body, fallback to plain text for full visibility
-    let body: any = null;
-    try {
-      body = await res.json();
-    } catch {
-      try {
-        body = await res.text();
-      } catch {
-        body = null;
-      }
-    }
-
-    const statusInfo = `HTTP ${res.status} ${res.statusText}`;
-    const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
-    const message = bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to create project`;
-    throw new Error(message);
-  }
-
-  return (await res.json()).data as ProjectRecord;
+	return {
+		Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
+		...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+		...(sessionToken ? { "x-session-token": sessionToken } : {}),
+	};
 };
 
-export const updateProject = async (id: string, payload: Partial<{ name: string; description: string; deadline?: string | null; status?: string | null; memberIds?: string[] | null }>) => {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
-  const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
-  const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+const requestProjects = async <T>(path: string, init?: RequestInit): Promise<T | null> => {
+	try {
+		const proxyEnv = getProxyEnv();
+		const response = await fetch(`${proxyEnv.BASE_API_URL}${path}`, {
+			cache: "no-store",
+			...init,
+			headers: {
+				...(await getAuthHeaders()),
+				...(init?.headers ?? {}),
+			},
+		});
 
-  const proxyEnv = getProxyEnv();
-  const res = await fetch(`${proxyEnv.BASE_API_URL}/projects/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...(sessionToken ? { "x-session-token": sessionToken } : {}),
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+		if (!response.ok) {
+			return null;
+		}
 
-  if (!res.ok) {
-    let body: any = null;
-    try {
-      body = await res.json();
-    } catch {
-      try {
-        body = await res.text();
-      } catch {
-        body = null;
-      }
-    }
-
-    const statusInfo = `HTTP ${res.status} ${res.statusText}`;
-    const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
-    const message = bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to update project`;
-    throw new Error(message);
-  }
-
-  return (await res.json()).data as ProjectRecord;
+		return (await response.json()) as T;
+	} catch {
+		return null;
+	}
 };
 
-export const deleteProject = async (id: string) => {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
-  const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
-  const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+export const getProjects = async (query?: Record<string, string | number | undefined>): Promise<ProjectRecord[] | null> => {
+	const payload = await requestProjects<ProjectListResponse>(`/projects${buildQueryString(query)}`);
+	return payload?.success && Array.isArray(payload.data) ? payload.data : null;
+};
 
-  const proxyEnv = getProxyEnv();
-  const res = await fetch(`${proxyEnv.BASE_API_URL}/projects/${id}`, {
-    method: "DELETE",
-    headers: {
-      Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...(sessionToken ? { "x-session-token": sessionToken } : {}),
-    },
-    cache: "no-store",
-  });
+export const getMyProjects = async (query?: Record<string, string | number | undefined>): Promise<ProjectRecord[] | null> => {
+	const payload = await requestProjects<ProjectListResponse>(`/projects/my${buildQueryString(query)}`);
+	return payload?.success && Array.isArray(payload.data) ? payload.data : null;
+};
 
-  if (!res.ok) {
-    let body: any = null;
-    try {
-      body = await res.json();
-    } catch {
-      try {
-        body = await res.text();
-      } catch {
-        body = null;
-      }
-    }
+export const getProjectById = async (id: string): Promise<ProjectRecord | null> => {
+	if (typeof id !== "string" || !id.trim()) {
+		return null;
+	}
 
-    const statusInfo = `HTTP ${res.status} ${res.statusText}`;
-    const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
-    const message = bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to delete project`;
-    throw new Error(message);
-  }
+	const payload = await requestProjects<ProjectResponse>(`/projects/${id}`);
+	return payload?.success ? payload.data ?? null : null;
+};
 
-  return true;
+export const createProject = async (payload: ProjectPayload): Promise<ProjectRecord> => {
+	const response = await requestProjects<BackendResponse<ProjectRecord>>("/projects", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	if (!response?.success || !response.data) {
+		throw new Error("Failed to create project");
+	}
+
+	return response.data;
+};
+
+export const updateProject = async (id: string, payload: ProjectPayload): Promise<ProjectRecord> => {
+	if (typeof id !== "string" || !id.trim()) {
+		throw new Error("Project ID is required");
+	}
+
+	const response = await requestProjects<BackendResponse<ProjectRecord>>(`/projects/${id}`, {
+		method: "PATCH",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	if (!response?.success || !response.data) {
+		throw new Error("Failed to update project");
+	}
+
+	return response.data;
+};
+
+export const deleteProject = async (id: string): Promise<void> => {
+	if (typeof id !== "string" || !id.trim()) {
+		throw new Error("Project ID is required");
+	}
+
+	const response = await requestProjects<BackendResponse<ProjectRecord>>(`/projects/${id}`, {
+		method: "DELETE",
+	});
+
+	if (!response?.success) {
+		throw new Error("Failed to delete project");
+	}
 };

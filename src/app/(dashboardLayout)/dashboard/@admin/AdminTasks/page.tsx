@@ -5,7 +5,10 @@ import { getCurrentUser } from "@/lib/currentUser";
 import { getTasks } from "@/services/task.service";
 
 export default async function AdminAllTasks() {
-  const [tasks, user] = await Promise.all([getTasks(), getCurrentUser()]);
+  const [tasks, user] = await Promise.all([
+    getTasks({ sortBy: "priority", order: "asc" }),
+    getCurrentUser(),
+  ]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -16,6 +19,8 @@ export default async function AdminAllTasks() {
         roleLabel={user?.role ? `${user.role} panel` : "Admin workspace"}
         returnTo="/dashboard/AdminTasks"
         statusEditable
+        allowAssignmentEdit
+        allowTaskEdit
       />
     </div>
   );

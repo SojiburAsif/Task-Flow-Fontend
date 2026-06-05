@@ -2,6 +2,7 @@ import {
   LayoutDashboard, 
   Briefcase, 
   CheckSquare, 
+  History,
   Settings 
 } from "lucide-react";
 
@@ -28,6 +29,11 @@ export const TeamMemberRouters = [
         title: "My Tasks Board",
         url: "/dashboard/my-tasks",
         icon: CheckSquare,
+      },
+      {
+        title: "Activity Feed",
+        url: "/dashboard/activities",
+        icon: History,
       },
     ],
   },

@@ -4,15 +4,15 @@ import { ActivityTimeline } from "@/components/Dashboard/ActivityTimeline";
 import { getCurrentUser } from "@/lib/currentUser";
 import { getLatestActivities } from "@/services/activity.service";
 
-export default async function ManagerActivitiesPage() {
+export default async function TeamMemberActivitiesPage() {
   const [activities, user] = await Promise.all([getLatestActivities(), getCurrentUser()]);
 
   return (
     <ActivityTimeline
       activities={activities ?? []}
-      title="Project Logs"
-      description="Review the latest actions on projects and tasks you own and monitor execution quality in real time."
-      roleLabel={user?.role ? `${user.role} panel` : "Project manager panel"}
+      title="My Activity Feed"
+      description="Follow updates related to your assigned projects and tasks in one clean timeline."
+      roleLabel={user?.role ? `${user.role} panel` : "Team member panel"}
     />
   );
 }
