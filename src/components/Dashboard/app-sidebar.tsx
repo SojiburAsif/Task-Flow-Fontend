@@ -5,12 +5,13 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Loader2, LogOut, LayoutDashboard } from "lucide-react"
-import { useFormStatus } from "react-dom"
+import { useActionState } from "react"
+import { toast } from "sonner"
 
 import { AdminRouters } from "@/router/AdminRouter"
 import { TeamMemberRouters } from "@/router/TeamMemberRouter"
 import { ProjectManagerRouters } from "@/router/ProjectManagerRoute"
-import { logoutAction } from "@/services/auth.service"
+import { logoutAction, type AuthActionState } from "@/services/auth.service"
 
 import {
   Sidebar,
@@ -38,9 +39,7 @@ const roleBasedRoutes: Record<string, any> = {
   ProjectManager: ProjectManagerRouters,
 }
 
-function SidebarLogoutButton() {
-  const { pending } = useFormStatus()
-
+function SidebarLogoutButton({ pending }: { pending: boolean }) {
   return (
     <button
       type="submit"
@@ -64,6 +63,23 @@ export function AppSidebar({
   user: { name: string; role: string; email: string }
 } & React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const [logoutState, logoutFormAction, logoutPending] = useActionState<AuthActionState, FormData>(logoutAction, {
+    success: false,
+    message: "",
+  })
+
+  React.useEffect(() => {
+    if (logoutState?.success) {
+      toast.success(logoutState.message || "Logged out successfully")
+      const id = window.setTimeout(() => {
+        window.location.assign("/login")
+      }, 0)
+
+      return () => window.clearTimeout(id)
+    }
+
+    return undefined
+  }, [logoutState?.success, logoutState?.message])
 
   const currentRoutes = roleBasedRoutes[user.role] || TeamMemberRouters
 
@@ -132,8 +148,8 @@ export function AppSidebar({
 
 
       <SidebarFooter className="border-t border-zinc-100 bg-white/90 p-4 dark:border-zinc-900/60 dark:bg-zinc-950/90">
-        <form action={logoutAction}>
-          <SidebarLogoutButton />
+        <form action={logoutFormAction}>
+          <SidebarLogoutButton pending={logoutPending} />
         </form>
       </SidebarFooter>
 
