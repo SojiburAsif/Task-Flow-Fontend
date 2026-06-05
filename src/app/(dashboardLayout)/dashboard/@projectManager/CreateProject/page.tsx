@@ -3,14 +3,8 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { createProject } from "@/services/project.service";
 import { getUsers } from "@/services/user.service";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Role } from "@/app/constants/role";
-import { UserPlus, Briefcase, Calendar as CalendarIcon } from "lucide-react";
+import { Briefcase, Calendar as CalendarIcon, FolderPlus, UserPlus } from "lucide-react";
 
 export const createProjectAction = async (formData: FormData) => {
   'use server';
@@ -60,74 +54,89 @@ export default async function CreateProjectPage() {
   });
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-2xl text-purple-600 dark:text-purple-400">
-          <Briefcase size={28} />
-        </div>
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Create New Project
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400">
-            Define project scope, set deadlines and assign team members.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-zinc-50 pt-24 pb-12 px-4 transition-colors duration-300 dark:bg-black sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        
+        {/* =========================================
+            HEADER SECTION (Sharp Design)
+        ============================================= */}
+        <div className="flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:text-left border-b border-zinc-200 pb-8 dark:border-zinc-800">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-none border border-purple-500/20 bg-purple-600 text-white shadow-none dark:border-purple-500/50">
+            <Briefcase size={24} strokeWidth={2.5} />
+          </div>
 
-      <form action={createProjectAction}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="flex flex-col items-center sm:items-start">
+            <span className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">
+              <FolderPlus size={12} />
+              Project Management
+            </span>
+            <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white sm:text-4xl">
+              Create New Project
+            </h1>
+            <p className="mt-1 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Define project scope, set deadlines and assign team members.
+            </p>
+          </div>
+        </div>
+
+        {/* =========================================
+            FORM SECTION
+        ============================================= */}
+        <form action={createProjectAction} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
           {/* Left Column: Project Details */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border-zinc-200/60 dark:border-zinc-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Project Information</CardTitle>
-                <CardDescription>Basic details about the project goals.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="border border-zinc-200 bg-white shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="border-b border-zinc-200 bg-zinc-50/50 p-6 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Project Information</h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Basic details about the project goals.</p>
+              </div>
+              
+              <div className="p-6 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Project Name</Label>
-                  <Input 
+                  <label htmlFor="name" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Project Name</label>
+                  <input 
                     id="name" 
                     name="name" 
                     placeholder="e.g. Website Redesign" 
                     required 
-                    className="focus:ring-purple-500"
+                    className="h-11 w-full border border-zinc-300 bg-zinc-50/50 px-4 text-sm text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-purple-500 focus:bg-white rounded-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea 
+                  <label htmlFor="description" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</label>
+                  <textarea 
                     id="description" 
                     name="description" 
                     placeholder="Describe the project objectives and scope..." 
                     rows={6} 
                     required 
+                    className="w-full border border-zinc-300 bg-zinc-50/50 p-4 text-sm text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-purple-500 focus:bg-white rounded-none resize-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <Label htmlFor="deadline">Deadline</Label>
+                    <label htmlFor="deadline" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Deadline</label>
                     <div className="relative">
-                      <Input 
+                      <input 
                         id="deadline" 
                         name="deadline" 
                         type="date" 
                         required 
-                        className="pl-10"
+                        className="h-11 w-full border border-zinc-300 bg-zinc-50/50 pl-10 pr-4 text-sm text-zinc-900 outline-none transition-all focus:border-purple-500 focus:bg-white rounded-none appearance-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900"
                       />
-                      <CalendarIcon className="absolute left-3 top-2.5 text-zinc-400" size={18} />
+                      <CalendarIcon className="absolute left-3 top-3 text-purple-500" size={18} />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="status">Initial Status</Label>
+                    <label htmlFor="status" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Initial Status</label>
                     <select 
                       id="status" 
                       name="status" 
-                      className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:border-zinc-800 dark:bg-zinc-950"
+                      className="h-11 w-full border border-zinc-300 bg-zinc-50/50 px-4 text-sm text-zinc-900 outline-none transition-all focus:border-purple-500 focus:bg-white rounded-none appearance-none cursor-pointer dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900"
                     >
                       <option value="Active">Active</option>
                       <option value="Completed">Completed</option>
@@ -135,66 +144,68 @@ export default async function CreateProjectPage() {
                     </select>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Member Assignment */}
-          <div className="space-y-6">
-            <Card className="border-zinc-200/60 dark:border-zinc-800 shadow-sm h-full">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+          <div className="space-y-6 flex flex-col">
+            <div className="border border-zinc-200 bg-white shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 flex-1 flex flex-col">
+              <div className="border-b border-zinc-200 bg-zinc-50/50 p-6 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                <h2 className="text-lg font-bold text-zinc-900 flex items-center gap-2 dark:text-white">
                   <UserPlus size={18} className="text-purple-500" />
                   Assign Members
-                </CardTitle>
-                <CardDescription>Select team members for this project.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Select team members for this project.</p>
+              </div>
+              
+              <div className="p-6 flex-1 flex flex-col">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar flex-1">
                   {teamMembers.length === 0 ? (
-                    <div className="text-sm text-zinc-500 italic text-center py-4">
-                      No team members found in the system.
+                    <div className="flex flex-col items-center justify-center h-full border border-dashed border-zinc-300 bg-zinc-50/50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-900/30">
+                      <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">No team members found</p>
                     </div>
                   ) : (
                     teamMembers.map(user => (
                       <label 
                         key={user.id} 
-                        className="flex items-center gap-3 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer transition-colors"
+                        className="flex items-center gap-3 p-3 border border-zinc-200 bg-white hover:border-purple-400 cursor-pointer transition-colors rounded-none dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-purple-600/50 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50 dark:has-[:checked]:bg-purple-900/20"
                       >
                         <input 
                           type="checkbox" 
                           name={`member-${user.id}`} 
-                          className="h-4 w-4 rounded border-zinc-300 text-purple-600 focus:ring-purple-500"
+                          className="h-4 w-4 rounded-none border-zinc-300 text-purple-600 focus:ring-purple-500 dark:border-zinc-700 dark:bg-zinc-900 dark:checked:bg-purple-600 cursor-pointer"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
                             {user.name || "Unnamed User"}
                           </p>
-                          <p className="text-[10px] text-zinc-500 truncate uppercase font-medium">
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate uppercase font-medium mt-0.5">
                             {user.role}
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 h-4">
+                        <span className="border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-600 rounded-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 shrink-0">
                           {user.status}
-                        </Badge>
+                        </span>
                       </label>
                     ))
                   )}
                 </div>
 
-                <div className="mt-8">
-                  <Button 
+                <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800/80">
+                  <button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-purple-200 dark:shadow-none transition-all hover:scale-[1.02]"
+                    className="w-full inline-flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold h-12 rounded-none transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
                   >
                     Create Project
-                  </Button>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
-        </div>
-      </form>
+
+        </form>
+      </div>
     </div>
   );
 }

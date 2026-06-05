@@ -1,17 +1,15 @@
 import React from "react";
 
-import { TaskBoard } from "@/components/Dashboard/TaskBoard";
-import { getCurrentUser } from "@/lib/currentUser";
-import { getTasks } from "@/services/task.service";
-import { getMyProjects } from "@/services/project.service";
-import { getUsers } from "@/services/user.service";
+import { TaskBoard } from "../../../../../components/Dashboard/TaskBoard";
+import { getCurrentUser } from "../../../../../lib/currentUser";
+import { getTasks } from "../../../../../services/task.service";
+import { getMyProjects } from "../../../../../services/project.service";
 
 export default async function ProjectManagerTasksPage() {
-	const [tasks, user, projects, users] = await Promise.all([
+	const [tasks, user, projects] = await Promise.all([
 		getTasks({ sortBy: "priority", order: "asc" }),
 		getCurrentUser(),
 		getMyProjects(),
-		getUsers(),
 	]);
 
 	return (
@@ -22,11 +20,11 @@ export default async function ProjectManagerTasksPage() {
 				description="Monitor every active task across the workspace, keep an eye on deadlines, and push updates directly from the board."
 				roleLabel={user?.role ? `${user.role} panel` : "Project manager workspace"}
 				returnTo="/dashboard/tasks"
+				canCreateTask
 				statusEditable
 				allowAssignmentEdit
 				allowTaskEdit
 				projects={projects ?? []}
-				users={users ?? []}
 			/>
 		</div>
 	);

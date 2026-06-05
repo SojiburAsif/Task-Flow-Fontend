@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 
 import { authCookieNames } from "@/lib/authUtils";
 import { getProxyEnv } from "@/lib/env";
-import { uploadToImgbb } from "@/lib/imageUpload.utils";
 import { updateTask } from "@/services/task.service";
 
 const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionToken?: string) => {
@@ -153,6 +152,7 @@ export const createTaskAction = async (prevState: { success: boolean; message: s
 	const priority = formData.get("priority")?.toString().trim() || undefined;
 	const projectId = formData.get("projectId")?.toString().trim() || undefined;
 	const assignedToId = formData.get("assignedToId")?.toString().trim() || undefined;
+	const attachmentLinksRaw = formData.get("attachmentLinks")?.toString().trim() || "";
 
 	if (!title) throw new Error("Task title is required.");
 	if (!projectId) throw new Error("Project ID is required.");
@@ -177,21 +177,18 @@ export const createTaskAction = async (prevState: { success: boolean; message: s
 		assignedToId: assignedToId || undefined,
 	};
 
-	// Handle file attachments (optional) - upload to image host and include URLs
-	const attachmentsValues = formData.getAll("attachments") || [];
-	const uploadedUrls: string[] = [];
-	for (const entry of attachmentsValues) {
-		if (entry instanceof File) {
-			try {
-				const url = await uploadToImgbb(entry);
-				uploadedUrls.push(url);
-			} catch (err) {
-				// don't block task creation if upload fails; log for visibility
-				if (process.env.NODE_ENV !== "production") console.error("attachment upload failed", err);
+	const attachments: string[] = [];
+
+	if (attachmentLinksRaw) {
+		for (const link of attachmentLinksRaw.split(/\r?\n|,/)) {
+			const trimmedLink = link.trim();
+			if (trimmedLink) {
+				attachments.push(trimmedLink);
 			}
 		}
 	}
-	if (uploadedUrls.length > 0) payload.attachments = uploadedUrls;
+
+	if (attachments.length > 0) payload.attachments = attachments;
 
 	const proxyEnv = getProxyEnv();
 	const res = await fetch(`${proxyEnv.BASE_API_URL}/tasks`, {

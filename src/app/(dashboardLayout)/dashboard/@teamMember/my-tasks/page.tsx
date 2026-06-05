@@ -1,8 +1,8 @@
 import React from "react";
 
-import { getCurrentUser } from "@/lib/currentUser";
-import { getMyTasks, getTasks } from "@/services/task.service";
-import { TaskBoard } from "@/components/Dashboard/TaskBoard";
+import { getCurrentUser } from "../../../../../lib/currentUser";
+import { getMyTasks, getTasks } from "../../../../../services/task.service";
+import { TaskBoard } from "../../../../../components/Dashboard/TaskBoard";
 
 export default async function MyTaskPage() {
   const [myTasks, fallbackTasks, user] = await Promise.all([

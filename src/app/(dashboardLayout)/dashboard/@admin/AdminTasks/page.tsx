@@ -1,8 +1,8 @@
 import React from "react";
 
-import { TaskBoard } from "@/components/Dashboard/TaskBoard";
-import { getCurrentUser } from "@/lib/currentUser";
-import { getTasks } from "@/services/task.service";
+import { TaskBoard } from "../../../../../components/Dashboard/TaskBoard";
+import { getCurrentUser } from "../../../../../lib/currentUser";
+import { getTasks } from "../../../../../services/task.service";
 
 export default async function AdminAllTasks() {
   const [tasks, user] = await Promise.all([
