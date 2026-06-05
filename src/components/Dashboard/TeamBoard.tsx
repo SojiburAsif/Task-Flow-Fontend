@@ -21,6 +21,7 @@ type TaskBoardProps = {
   canEdit?: boolean;
   statusEditable?: boolean;
   canCreateTask?: boolean;
+  initialProjectId?: string | null;
   projects?: ProjectRecord[];
   users?: UserProfile[];
   allowAssignmentEdit?: boolean;
@@ -66,6 +67,7 @@ export function TeamBoard({
   returnTo = "/dashboard/projects",
   statusEditable = false,
   canCreateTask = false,
+  initialProjectId = null,
   projects,
   allowAssignmentEdit = false,
   allowTaskEdit = false,
@@ -119,6 +121,19 @@ export function TeamBoard({
     setCreateTaskProjectId(projectId ?? null);
     setCreateTaskOpen(true);
   };
+
+  useEffect(() => {
+    // If initialProjectId was provided by the server page, open that project modal when projects are loaded
+    if (!projects || projects.length === 0) return;
+    if (initialProjectId) {
+      const found = projects.find(p => p.id === initialProjectId);
+      if (found) {
+        // schedule on next frame to avoid synchronous setState inside effect
+        const rafId = window.requestAnimationFrame(() => setOpenProjectModal(found));
+        return () => window.cancelAnimationFrame(rafId);
+      }
+    }
+  }, [projects, initialProjectId]);
 
   return (
     <>

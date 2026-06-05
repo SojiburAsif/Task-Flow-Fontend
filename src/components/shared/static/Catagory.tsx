@@ -36,7 +36,7 @@ const categories = [
   { id: 12, name: "Printing & Packaging", count: "425 Jobs", icon: Printer, accent: "slate" },
 ]
 
-// Framer Motion অ্যানিমেশন ভ্যারিয়েন্টস
+// Framer Motion অ্যানিমেশন ভ্যারিয়েন্টস
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -50,7 +50,7 @@ const itemVariants: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 15 },
+    transition: { type: 'spring', stiffness: 120, damping: 15 },
   },
 }
 
@@ -59,7 +59,7 @@ export default function Category() {
   const { resolvedTheme } = useTheme()
   const isDark = mounted && resolvedTheme === "dark"
 
-  // ফিক্সড useEffect: সিঙ্ক্রোনাসলি setState কল না করে অ্যাসিনক্রোনাস ফ্রেমে পুশ করা হয়েছে
+  // ফিক্সড useEffect: সিঙ্ক্রোনাসলি setState কল না করে অ্যাসিনক্রোনাস ফ্রেমে পুশ করা হয়েছে
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setMounted(true)
@@ -69,96 +69,128 @@ export default function Category() {
   }, [])
 
   return (
-    <section className={`relative w-full overflow-hidden py-24 transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-white text-zinc-950"}`}>
-      <div className={`pointer-events-none absolute inset-0 -z-10 ${isDark ? "bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.08),transparent_45%)]" : "bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.05),transparent_40%)]"}`} />
+    <section className={`relative w-full overflow-hidden py-24 transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-zinc-50 text-zinc-950"}`}>
+      
+      {/* Background Geometric Grid Effects (Matching other pages) */}
+      <div className="absolute inset-0 z-0 bg-transparent dark:bg-transparent" />
+      <div className={`absolute inset-0 z-0 opacity-[0.03] ${isDark ? "bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)]" : "bg-[linear-gradient(to_right,#000000_1px,transparent_1px),linear-gradient(to_bottom,#000000_1px,transparent_1px)]"} bg-[size:4rem_4rem]`} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header */}
-        <div className="mb-16 text-center">
-          <div className={`mb-4 inline-flex items-center gap-2 border px-4 py-1.5 text-xs font-semibold tracking-wide backdrop-blur-sm ${
+        {/* =========================================
+            SECTION HEADER (Sharp Design)
+        ============================================= */}
+        <div className="mb-16 flex flex-col items-center text-center">
+          <div className={`mb-4 flex items-center gap-2 border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] rounded-none ${
             isDark 
-              ? "border-purple-900/30 bg-black text-purple-300" 
-              : "border-purple-200/50 bg-white text-purple-700"
+              ? "border-purple-500/30 bg-purple-500/10 text-purple-400" 
+              : "border-purple-200 bg-purple-50 text-purple-700"
           }`}>
-            <Grid size={13} className={isDark ? "text-zinc-400" : "text-purple-500"} /> Popular Categories
+            <Grid size={12} className={isDark ? "text-purple-400" : "text-purple-600"} /> Popular Categories
           </div>
           
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
-            Browse Top <span className={isDark ? "text-purple-400" : "text-purple-600"}>Categories</span>
-          </h2>
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={`max-w-3xl text-3xl font-black leading-tight tracking-tight sm:text-5xl ${
+              isDark ? "text-white" : "text-zinc-950"
+            }`}
+          >
+            Browse Top <span className="text-purple-600 dark:text-purple-400">Categories</span>
+          </motion.h2>
+          <p className={`mt-4 max-w-xl text-sm font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+            Discover leading industries and connect with thousands of active job opportunities right now.
+          </p>
         </div>
 
-        {/* Categories Grid Layout with Motion */}
+        {/* =========================================
+            CATEGORIES GRID (Sharp Brutalist Cards)
+        ============================================= */}
         <motion.div 
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-6"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={containerVariants}
         >
           {categories.map((category) => {
             const IconComponent = category.icon;
-            const accentClasses: Record<string, { container: string; icon: string; hover: string }> = {
+            
+            // ডাইনামিক শার্প কালার টোন (No Rounded, Sharp Borders)
+            const accentClasses: Record<string, { container: string; icon: string; hover: string; line: string }> = {
               sky: {
-                container: isDark ? "border-sky-500/20 bg-sky-500/10" : "border-sky-100 bg-sky-50",
-                icon: isDark ? "text-sky-300" : "text-sky-600",
-                hover: "group-hover:border-sky-400 group-hover:bg-sky-500 group-hover:text-white",
+                container: isDark ? "border-sky-500/20 bg-sky-500/10" : "border-sky-200 bg-sky-50",
+                icon: isDark ? "text-sky-400" : "text-sky-600",
+                hover: isDark ? "hover:border-sky-500/50" : "hover:border-sky-400",
+                line: "bg-sky-500",
               },
               blue: {
-                container: isDark ? "border-blue-500/20 bg-blue-500/10" : "border-blue-100 bg-blue-50",
-                icon: isDark ? "text-blue-300" : "text-blue-600",
-                hover: "group-hover:border-blue-400 group-hover:bg-blue-500 group-hover:text-white",
+                container: isDark ? "border-blue-500/20 bg-blue-500/10" : "border-blue-200 bg-blue-50",
+                icon: isDark ? "text-blue-400" : "text-blue-600",
+                hover: isDark ? "hover:border-blue-500/50" : "hover:border-blue-400",
+                line: "bg-blue-500",
               },
               amber: {
-                container: isDark ? "border-amber-500/20 bg-amber-500/10" : "border-amber-100 bg-amber-50",
-                icon: isDark ? "text-amber-300" : "text-amber-600",
-                hover: "group-hover:border-amber-400 group-hover:bg-amber-500 group-hover:text-white",
+                container: isDark ? "border-amber-500/20 bg-amber-500/10" : "border-amber-200 bg-amber-50",
+                icon: isDark ? "text-amber-400" : "text-amber-600",
+                hover: isDark ? "hover:border-amber-500/50" : "hover:border-amber-400",
+                line: "bg-amber-500",
               },
               orange: {
-                container: isDark ? "border-orange-500/20 bg-orange-500/10" : "border-orange-100 bg-orange-50",
-                icon: isDark ? "text-orange-300" : "text-orange-600",
-                hover: "group-hover:border-orange-400 group-hover:bg-orange-500 group-hover:text-white",
+                container: isDark ? "border-orange-500/20 bg-orange-500/10" : "border-orange-200 bg-orange-50",
+                icon: isDark ? "text-orange-400" : "text-orange-600",
+                hover: isDark ? "hover:border-orange-500/50" : "hover:border-orange-400",
+                line: "bg-orange-500",
               },
               green: {
-                container: isDark ? "border-emerald-500/20 bg-emerald-500/10" : "border-emerald-100 bg-emerald-50",
-                icon: isDark ? "text-emerald-300" : "text-emerald-600",
-                hover: "group-hover:border-emerald-400 group-hover:bg-emerald-500 group-hover:text-white",
+                container: isDark ? "border-emerald-500/20 bg-emerald-500/10" : "border-emerald-200 bg-emerald-50",
+                icon: isDark ? "text-emerald-400" : "text-emerald-600",
+                hover: isDark ? "hover:border-emerald-500/50" : "hover:border-emerald-400",
+                line: "bg-emerald-500",
               },
               rose: {
-                container: isDark ? "border-rose-500/20 bg-rose-500/10" : "border-rose-100 bg-rose-50",
-                icon: isDark ? "text-rose-300" : "text-rose-600",
-                hover: "group-hover:border-rose-400 group-hover:bg-rose-500 group-hover:text-white",
+                container: isDark ? "border-rose-500/20 bg-rose-500/10" : "border-rose-200 bg-rose-50",
+                icon: isDark ? "text-rose-400" : "text-rose-600",
+                hover: isDark ? "hover:border-rose-500/50" : "hover:border-rose-400",
+                line: "bg-rose-500",
               },
               emerald: {
-                container: isDark ? "border-emerald-500/20 bg-emerald-500/10" : "border-emerald-100 bg-emerald-50",
-                icon: isDark ? "text-emerald-300" : "text-emerald-600",
-                hover: "group-hover:border-emerald-400 group-hover:bg-emerald-500 group-hover:text-white",
+                container: isDark ? "border-emerald-500/20 bg-emerald-500/10" : "border-emerald-200 bg-emerald-50",
+                icon: isDark ? "text-emerald-400" : "text-emerald-600",
+                hover: isDark ? "hover:border-emerald-500/50" : "hover:border-emerald-400",
+                line: "bg-emerald-500",
               },
               violet: {
-                container: isDark ? "border-violet-500/20 bg-violet-500/10" : "border-violet-100 bg-violet-50",
-                icon: isDark ? "text-violet-300" : "text-violet-600",
-                hover: "group-hover:border-violet-400 group-hover:bg-violet-500 group-hover:text-white",
+                container: isDark ? "border-violet-500/20 bg-violet-500/10" : "border-violet-200 bg-violet-50",
+                icon: isDark ? "text-violet-400" : "text-violet-600",
+                hover: isDark ? "hover:border-violet-500/50" : "hover:border-violet-400",
+                line: "bg-violet-500",
               },
               pink: {
-                container: isDark ? "border-pink-500/20 bg-pink-500/10" : "border-pink-100 bg-pink-50",
-                icon: isDark ? "text-pink-300" : "text-pink-600",
-                hover: "group-hover:border-pink-400 group-hover:bg-pink-500 group-hover:text-white",
+                container: isDark ? "border-pink-500/20 bg-pink-500/10" : "border-pink-200 bg-pink-50",
+                icon: isDark ? "text-pink-400" : "text-pink-600",
+                hover: isDark ? "hover:border-pink-500/50" : "hover:border-pink-400",
+                line: "bg-pink-500",
               },
               teal: {
-                container: isDark ? "border-teal-500/20 bg-teal-500/10" : "border-teal-100 bg-teal-50",
-                icon: isDark ? "text-teal-300" : "text-teal-600",
-                hover: "group-hover:border-teal-400 group-hover:bg-teal-500 group-hover:text-white",
+                container: isDark ? "border-teal-500/20 bg-teal-500/10" : "border-teal-200 bg-teal-50",
+                icon: isDark ? "text-teal-400" : "text-teal-600",
+                hover: isDark ? "hover:border-teal-500/50" : "hover:border-teal-400",
+                line: "bg-teal-500",
               },
               indigo: {
-                container: isDark ? "border-indigo-500/20 bg-indigo-500/10" : "border-indigo-100 bg-indigo-50",
-                icon: isDark ? "text-indigo-300" : "text-indigo-600",
-                hover: "group-hover:border-indigo-400 group-hover:bg-indigo-500 group-hover:text-white",
+                container: isDark ? "border-indigo-500/20 bg-indigo-500/10" : "border-indigo-200 bg-indigo-50",
+                icon: isDark ? "text-indigo-400" : "text-indigo-600",
+                hover: isDark ? "hover:border-indigo-500/50" : "hover:border-indigo-400",
+                line: "bg-indigo-500",
               },
               slate: {
-                container: isDark ? "border-slate-500/20 bg-slate-500/10" : "border-slate-100 bg-slate-50",
-                icon: isDark ? "text-slate-300" : "text-slate-600",
-                hover: "group-hover:border-slate-400 group-hover:bg-slate-500 group-hover:text-white",
+                container: isDark ? "border-zinc-500/20 bg-zinc-500/10" : "border-zinc-300 bg-zinc-100",
+                icon: isDark ? "text-zinc-300" : "text-zinc-700",
+                hover: isDark ? "hover:border-zinc-500/50" : "hover:border-zinc-400",
+                line: "bg-zinc-500",
               },
             }
 
@@ -168,47 +200,49 @@ export default function Category() {
               <motion.div
                 key={category.id}
                 variants={itemVariants}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className={`group flex min-h-55 flex-col items-center justify-center border p-8 text-center transition-all duration-300 cursor-pointer select-none
+                className={`group relative flex min-h-48 flex-col items-center justify-center border p-8 text-center transition-all duration-300 cursor-pointer select-none shadow-none hover:shadow-xl hover:-translate-y-1 rounded-none ${accent.hover}
                   ${isDark 
-                    ? "border-zinc-900/70 bg-zinc-950/60 hover:shadow-2xl hover:shadow-black/20" 
-                    : "border-zinc-200 bg-white hover:shadow-2xl hover:shadow-zinc-200/60"
+                    ? "border-zinc-800 bg-zinc-950/80" 
+                    : "border-zinc-200 bg-white"
                   }`}
               >
-                {/* Icon Container */}
-                <div className={`flex h-14 w-14 items-center justify-center border transition-all duration-300 ${accent.container} ${accent.hover}`}
-                >
-                  <IconComponent size={20} strokeWidth={1.8} className={`transition-transform duration-300 group-hover:scale-105 ${accent.icon}`} />
+                {/* Icon Container (Sharp Geometry) */}
+                <div className={`flex h-14 w-14 items-center justify-center border transition-all duration-300 rounded-none ${accent.container}`}>
+                  <IconComponent size={22} strokeWidth={2} className={`transition-transform duration-300 group-hover:scale-110 ${accent.icon}`} />
                 </div>
                 
-
                 {/* Category Name */}
-                <h3 className={`mt-5 text-lg font-bold tracking-tight transition-colors duration-200 ${isDark ? "text-zinc-200 group-hover:text-white" : "text-zinc-900 group-hover:text-zinc-950"}`}>
+                <h3 className={`mt-5 text-base font-bold tracking-tight transition-colors duration-200 ${isDark ? "text-zinc-100 group-hover:text-white" : "text-zinc-900"}`}>
                   {category.name}
                 </h3>
 
                 {/* Job Count */}
-                <p className={`mt-2 text-sm font-semibold tracking-wide ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                <p className={`mt-2 text-[10px] font-black uppercase tracking-wider ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                   {category.count}
                 </p>
+
+                {/* Bottom Decorative Hover Line */}
+                <div className={`absolute bottom-0 left-0 h-0.5 w-0 transition-all duration-500 group-hover:w-full ${accent.line}`} />
               </motion.div>
             )
           })}
         </motion.div>
 
-        {/* Bottom CTA Button */}
+        {/* =========================================
+            BOTTOM CTA BUTTON
+        ============================================= */}
         <div className="mt-16 text-center">
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`inline-flex items-center gap-2 border px-7 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-200 group
+            className={`inline-flex items-center gap-2 border px-8 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-200 group rounded-none
               ${isDark 
-                ? "border-purple-500/30 bg-purple-600 text-black hover:bg-purple-500" 
-                : "border-zinc-900 bg-zinc-950 text-white hover:bg-zinc-900"
+                ? "border-purple-500 bg-purple-600 text-black hover:bg-purple-500" 
+                : "border-purple-600 bg-purple-600 text-white hover:bg-purple-700 hover:border-purple-700"
               }`}
           >
             Browse All Categories
-            <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-1" />
+            <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
           </motion.button>
         </div>
 

@@ -1,9 +1,21 @@
 "use client";
 
-import React from 'react';
-import { ArrowRight, Search, TrendingUp, Zap, FileText, ShoppingBag, Users, DollarSign, Package, LucideIcon } from 'lucide-react';
-import { motion, Variants } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowRight, Search, TrendingUp, Zap, FileText, ShoppingBag, Users, DollarSign, Package, FolderGit2, CheckSquare, X, LucideIcon } from 'lucide-react';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/provider/theme-provider';
+import Link from 'next/link';
+
+// ==========================================
+// DUMMY SEARCH DATA (Replace with API later)
+// ==========================================
+const mockSearchData = [
+  { id: "1", type: "Project", title: "Website Redesign 2026", status: "Active", link: "/dashboard/projects" },
+  { id: "2", type: "Project", title: "Cloud Migration", status: "On Hold", link: "/dashboard/projects" },
+  { id: "3", type: "Task", title: "Fix Navigation Bug", status: "High Priority", link: "/dashboard/tasks/my" },
+  { id: "4", type: "Project", title: "Billing System Integration", status: "Completed", link: "/dashboard/projects" },
+  { id: "5", type: "Task", title: "Update Staff Reports", status: "Medium Priority", link: "/dashboard/tasks/my" },
+];
 
 interface FloatingIconProps {
   icon: LucideIcon;
@@ -67,107 +79,220 @@ const FloatingBackground: React.FC = () => {
 };
 
 export default function HeroSection() {
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
+  
+  // Search States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<typeof mockSearchData>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
+
   const isDark = mounted && resolvedTheme === "dark";
 
-  React.useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setMounted(true);
-    });
-
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  // Handle click outside to close search dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearching(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle Search Logic
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim().length > 0) {
+      setIsSearching(true);
+      // Filter mock data (Replace with API call)
+      const filtered = mockSearchData.filter(item => 
+        item.title.toLowerCase().includes(query.toLowerCase()) || 
+        item.type.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(filtered);
+    } else {
+      setIsSearching(false);
+      setSearchResults([]);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setIsSearching(false);
+    setSearchResults([]);
+  };
+
   return (
-    <section className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-24 ${isDark ? "bg-black text-white" : "bg-[linear-gradient(180deg,#faf5ff_0%,#ffffff_42%,#f8fafc_100%)] text-zinc-950"}`}>
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.12),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.18),transparent_70%)]" />
+    <section className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-24 ${isDark ? "bg-black text-white" : "bg-zinc-50 text-zinc-950"}`}>
+      
+      {/* Background Gradients */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.12),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.15),transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[linear-gradient(to_bottom,rgba(168,85,247,0.1)_0%,transparent_100%)]" />
       
       <FloatingBackground />
 
       <motion.div
-        className="relative z-10 max-w-5xl mx-auto px-6 text-center"
+        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 w-full text-center"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Sub Badge */}
-        <motion.div variants={itemVariants} className={`mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide backdrop-blur-sm ${isDark ? "border-purple-900/40 bg-purple-950/40 text-purple-300" : "border-purple-200/60 bg-purple-50/70 text-purple-700"}`}>
-          <Zap size={14} className="fill-purple-600/20" /> Automate Your Workflow
+        {/* Sub Badge (Sharp Brutalist) */}
+        <motion.div variants={itemVariants} className={`mb-8 inline-flex items-center gap-2 border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] rounded-none ${isDark ? "border-purple-500/30 bg-purple-500/10 text-purple-400" : "border-purple-200 bg-purple-50 text-purple-700"}`}>
+          <Zap size={13} className="text-purple-500" /> Automate Your Workflow
         </motion.div>
 
-        {/* Main Heading */}
-        <motion.h1 className="mb-6 text-5xl font-extrabold leading-[1.15] tracking-tight md:text-7xl" variants={itemVariants}>
-          Simplify Billing and <br />
-          <span className="relative inline-block px-5 py-1 mx-1">
-            <span className="absolute inset-0 rounded-2xl bg-purple-600 transform -rotate-1 shadow-md shadow-purple-600/20" />
-            <span className="relative text-white italic font-black">Track Profits</span>
-          </span>
+        {/* Main Heading with Looping Highlight */}
+        <motion.h1 className="mb-6 text-4xl font-black leading-[1.15] tracking-tight sm:text-6xl md:text-7xl" variants={itemVariants}>
+          Simplify Billing and <br className="hidden sm:block" />
+          <motion.span 
+            className={`relative inline-block px-4 py-1 mx-2 mt-2 sm:mt-0 bg-purple-600 text-white rounded-none border border-purple-700 ${isDark ? 'shadow-[4px_4px_0px_0px_rgba(168,85,247,0.5)]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]'}`}
+            animate={{ 
+              rotate: [-2, 2, -2],
+              y: [0, -3, 0],
+            }}
+            transition={{
+              duration: 4,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+          >
+            Track Profits
+          </motion.span>
           {" "}Instantly
         </motion.h1>
 
         {/* Description */}
-        <motion.p className={`mx-auto mb-10 max-w-2xl text-sm font-medium leading-relaxed md:text-base ${isDark ? "text-zinc-400" : "text-zinc-500"}`} variants={itemVariants}>
-          No more manual math. The ultimate SaaS solution to manage your shop&apos;s <br className="hidden md:block" />
-          invoices, staff reports, and net profit analytics in one secure dashboard.
+        <motion.p className={`mx-auto mb-12 max-w-2xl text-sm font-medium leading-relaxed sm:text-base ${isDark ? "text-zinc-400" : "text-zinc-500"}`} variants={itemVariants}>
+          No more manual math. The ultimate SaaS solution to manage your workspace&#39;s <br className="hidden md:block" />
+          projects, staff tasks, and profit analytics in one secure dashboard.
         </motion.p>
 
-        {/* Command Search Bar */}
-        <motion.div className="mx-auto mb-16 max-w-2xl" variants={itemVariants}>
-          <div className={`relative flex items-center rounded-2xl border p-2 shadow-xl backdrop-blur-sm transition-all focus-within:border-purple-500 ${isDark ? "border-black/60 bg-black/80 shadow-none" : "border-purple-200/70 bg-white/90 shadow-purple-200/30"}`}>
-            <div className={`pl-3 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
-              <Search size={18} />
+        {/* =========================================
+            COMMAND SEARCH BAR & DROPDOWN (Sharp)
+        ============================================= */}
+        <motion.div className="mx-auto mb-16 max-w-2xl relative z-50" variants={itemVariants} ref={searchRef}>
+          <div className={`relative flex items-center border-2 transition-all p-1.5 ${isDark ? "border-zinc-800 bg-zinc-950 focus-within:border-purple-500" : "border-zinc-200 bg-white focus-within:border-purple-500 shadow-sm"}`}>
+            <div className={`pl-4 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
+              <Search size={20} strokeWidth={2.5} />
             </div>
             <input
               type="text"
-              placeholder="Search invoices, products, or reports..."
-              className={`w-full bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-zinc-400 ${isDark ? "text-white" : "text-zinc-900"}`}
+              value={searchQuery}
+              onChange={handleSearch}
+              onFocus={() => searchQuery.trim().length > 0 && setIsSearching(true)}
+              placeholder="Search projects, tasks, or reports..."
+              className={`w-full bg-transparent px-4 py-3.5 text-sm font-bold outline-none placeholder:text-zinc-400 placeholder:font-medium ${isDark ? "text-white" : "text-zinc-900"}`}
             />
+            {searchQuery && (
+              <button onClick={clearSearch} className="mr-2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                <X size={16} />
+              </button>
+            )}
             <motion.button
-              className="rounded-xl bg-purple-600 p-2.5 text-white shadow-lg shadow-purple-600/20 transition-all hover:bg-purple-700"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="bg-purple-600 px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-purple-700 rounded-none border border-purple-700 shrink-0 hidden sm:flex items-center gap-2"
+              whileTap={{ scale: 0.98 }}
             >
-              <ArrowRight size={16} />
+              Search <ArrowRight size={14} />
             </motion.button>
           </div>
+
+          {/* SEARCH RESULTS DROPDOWN (Brutalist Panel) */}
+          <AnimatePresence>
+            {isSearching && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className={`absolute top-full left-0 right-0 mt-2 border text-left rounded-none shadow-2xl overflow-hidden ${isDark ? "bg-zinc-950 border-zinc-800" : "bg-white border-zinc-200"}`}
+              >
+                <div className={`border-b px-4 py-2 text-[10px] font-black uppercase tracking-widest ${isDark ? "border-zinc-800 bg-zinc-900/50 text-zinc-500" : "border-zinc-200 bg-zinc-50 text-zinc-400"}`}>
+                  Search Results
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {searchResults.length > 0 ? (
+                    searchResults.map((item) => (
+                      <Link 
+                        key={item.id} 
+                        href={item.link}
+                        onClick={clearSearch}
+                        className={`flex items-center justify-between border-b last:border-b-0 p-4 transition-colors ${isDark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-100 hover:bg-zinc-50"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center border rounded-none ${item.type === "Project" ? "border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-400" : "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400"}`}>
+                            {item.type === "Project" ? <FolderGit2 size={16} /> : <CheckSquare size={16} />}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{item.title}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-0.5">{item.type}</p>
+                          </div>
+                        </div>
+                        <span className={`border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${item.status === "Active" || item.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400" : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400"}`}>
+                          {item.status}
+                        </span>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center">
+                      <p className={`text-sm font-bold ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>No results found for &rdquo;{searchQuery}&#34;</p>
+                      <p className="text-xs text-zinc-500 mt-1">Try searching for &#34;Project&rdquo; or &#34;Task&rdquo;</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
-          <p className={`mt-3 text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+          {/* Shortcuts */}
+          <p className={`mt-4 text-xs font-bold uppercase tracking-wider ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
             Shortcuts:{" "}
-            <span className={`cursor-pointer hover:underline ${isDark ? "text-purple-400" : "text-purple-600"}`}>Daily Sales</span>,
-            <span className={`ml-2 cursor-pointer hover:underline ${isDark ? "text-purple-400" : "text-purple-600"}`}>Stock Alerts</span>,
-            <span className={`ml-2 cursor-pointer hover:underline ${isDark ? "text-purple-400" : "text-purple-600"}`}>Staff Logs</span>
+            <span className={`cursor-pointer transition-colors ${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"}`}>Daily Sales</span> •
+            <span className={`ml-2 cursor-pointer transition-colors ${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"}`}>Active Projects</span> •
+            <span className={`ml-2 cursor-pointer transition-colors ${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"}`}>Staff Logs</span>
           </p>
         </motion.div>
 
-        {/* Stats Grid Component */}
-        <div className="relative z-10 grid w-full grid-cols-1 items-center gap-8 border-t border-purple-200/50 pt-10 md:grid-cols-3 dark:border-zinc-800/60">
-          <motion.div className="text-center md:text-left" variants={itemVariants}>
+        {/* =========================================
+            STATS GRID (Brutalist)
+        ============================================= */}
+        <div className="relative z-10 grid w-full grid-cols-1 items-center gap-6 border-t pt-12 md:grid-cols-3 dark:border-zinc-800 border-zinc-200">
+          <motion.div className="text-center md:text-left p-4 border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 rounded-none shadow-none" variants={itemVariants}>
             <h3 className={`text-4xl font-black tracking-tight ${isDark ? "text-white" : "text-zinc-900"}`}>12K+</h3>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-zinc-400">Active Shops</p>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Active Workspaces</p>
           </motion.div>
 
-          <motion.div className="flex flex-col sm:flex-row gap-3 justify-center" variants={itemVariants}>
-            <button className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all">
-              <Zap size={14} fill="white" /> Get Started
+          <motion.div className="flex flex-col gap-3 justify-center" variants={itemVariants}>
+            <button className="flex items-center justify-center gap-2 border border-purple-600 bg-purple-600 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-purple-700 rounded-none shadow-none active:scale-95">
+              <Zap size={14} fill="white" /> Get Started Now
             </button>
-            <button className={`rounded-xl border px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all ${isDark ? "border-black/60 bg-black text-zinc-300 hover:bg-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"}`}>
+            <button className={`border px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none shadow-none active:scale-95 ${isDark ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white" : "border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-400"}`}>
               Watch Demo
             </button>
           </motion.div>
 
-          <motion.div className="text-center md:text-right" variants={itemVariants}>
+          <motion.div className="text-center md:text-right p-4 border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 rounded-none shadow-none" variants={itemVariants}>
             <h3 className={`text-4xl font-black tracking-tight ${isDark ? "text-white" : "text-zinc-900"}`}>$2M+</h3>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-zinc-400">Processed Monthly</p>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Processed Monthly</p>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Infinity Marquee Bar */}
-      <div className={`absolute bottom-0 z-10 w-full overflow-hidden border-t py-3.5 backdrop-blur-sm ${isDark ? "border-black/60 bg-black/80" : "border-purple-200/50 bg-purple-50/30"}`}>
+      {/* =========================================
+          INFINITY MARQUEE BAR (Sharp Design)
+      ============================================= */}
+      <div className={`absolute bottom-0 z-10 w-full overflow-hidden border-t py-3.5 backdrop-blur-md ${isDark ? "border-zinc-800 bg-black/80" : "border-purple-200 bg-purple-50/80"}`}>
         <div className="flex whitespace-nowrap animate-marquee-fixed gap-8">
-          <span className={`text-[9px] font-bold uppercase tracking-[0.35em] ${isDark ? "text-purple-300/80" : "text-purple-700"}`}>
+          <span className={`text-[10px] font-black uppercase tracking-[0.35em] ${isDark ? "text-purple-400" : "text-purple-700"}`}>
             • NO CREDIT CARD REQUIRED • SECURE CLOUD STORAGE • REAL-TIME ANALYTICS • MULTI-USER ACCESS • CUSTOMER SUPPORT 24/7 • NO CREDIT CARD REQUIRED • SECURE CLOUD STORAGE • REAL-TIME ANALYTICS • MULTI-USER ACCESS
           </span>
         </div>

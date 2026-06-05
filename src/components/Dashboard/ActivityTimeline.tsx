@@ -32,7 +32,7 @@ const formatWhen = (value: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-// রোল ফরম্যাট হেল্পার
+
 const formatRoleLabel = (role?: string) => {
   if (!role) return "User";
   if (role === "ProjectManager") return "Manager";
@@ -40,7 +40,7 @@ const formatRoleLabel = (role?: string) => {
   return role.replace(/_/g, " ");
 };
 
-// অ্যানিমেশন ভ্যারিয়্যান্টস
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -59,19 +59,21 @@ export function ActivityTimeline({ activities, title, description, roleLabel }: 
 
   return (
     <section className="relative w-full">
-      {/* হেডার সেকশন */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-600 dark:text-purple-400">{roleLabel}</p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-4xl">{title}</h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</p>
-        </div>
-        <div className="inline-flex items-center justify-center border border-purple-500/20 bg-purple-50 px-5 py-2 text-xs font-bold text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 shrink-0">
-          {activities.length} Recent Activit{activities.length === 1 ? "y" : "ies"}
+      <div className="relative overflow-hidden border border-zinc-200 bg-white/90 p-6 shadow-none backdrop-blur rounded-none dark:border-zinc-800 dark:bg-zinc-950/90 sm:p-8 mb-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-zinc-500/5 dark:from-purple-500/10 dark:to-transparent" />
+
+        <div className="relative mb-4 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-600 dark:text-purple-400">{roleLabel}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-4xl">{title}</h1>
+            <p className="max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</p>
+          </div>
+          <div className="inline-flex items-center justify-center border border-purple-500/20 bg-purple-50 px-5 py-2 text-xs font-bold text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 shrink-0">
+            {activities.length} Recent Activit{activities.length === 1 ? "y" : "ies"}
+          </div>
         </div>
       </div>
 
-      {/* মেইন কন্টেইনার */}
       <div className="border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-950 sm:p-8">
         
         {/* কন্টেইনার হেডার */}

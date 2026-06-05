@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { redirect } from "next/navigation";
 
@@ -6,19 +7,14 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/currentUser";
 import { normalizeDashboardRole } from "@/lib/roleUtils";
 
-export default async function DashboardLayout({
-  children,
-  admin,
-  projectManager,
-  teamMember,
-  modal,
-}: {
-  children: React.ReactNode;
-  admin: React.ReactNode;
-  projectManager: React.ReactNode;
-  teamMember: React.ReactNode;
-  modal: React.ReactNode;
-}) {
+export default async function DashboardLayout(props: any) {
+  const { children, admin, projectManager, teamMember, modal } = props as {
+    children?: React.ReactNode;
+    admin?: React.ReactNode;
+    projectManager?: React.ReactNode;
+    teamMember?: React.ReactNode;
+    modal?: React.ReactNode;
+  };
   const user = await getCurrentUser();
 
   if (!user) {

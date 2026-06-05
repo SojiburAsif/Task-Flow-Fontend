@@ -16,7 +16,7 @@ export default function Logo() {
         loading="eager"
         className="h-13 w-auto object-contain"
       />
-      <span className="text-white transition-colors">
+      <span className=" transition-colors dark:text-white text-black">
         TaskFlow
       </span>
     </Link>

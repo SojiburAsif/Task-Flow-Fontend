@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock, LineChart, Star, Activity, Info, HomeIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Logo from "../logo/logo";
 import { ModeToggle } from "../Theme/Toogle";
@@ -15,12 +16,12 @@ import { useActionState } from "react";
 import { Role } from "@/app/constants/role";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Features", href: "#features" },
-  { label: "Workflow", href: "#workflow" },
-  { label: "Analytics", href: "#analytics" },
-  { label: "Activities", href: "#activities" },
-
+  {label: "Home", href: "/", icon: HomeIcon}, 
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Analytics", href: "/analytics", icon: LineChart },
+  { label: "Features", href: "/features", icon: Star },
+  { label: "Activities", href: "/activities", icon: Activity },
+  { label: "About", href: "/about", icon: Info },
 ];
 
 type NavbarProps = {
@@ -91,7 +92,7 @@ function PasswordChangeModal({ open, onOpenChange, isDark }: PasswordChangeModal
 
       <div className={`relative z-61 w-full max-w-lg overflow-hidden border backdrop-blur-xl ${isDark ? "border-zinc-800 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/50" : "border-purple-100 bg-white/95 text-zinc-950 shadow-[0_24px_80px_rgba(91,33,182,0.16)]"}`}>
         <div className="relative px-6 py-5 sm:px-8 sm:py-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
 
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
@@ -251,7 +252,7 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
 
       <div className={`relative z-61 w-full max-w-lg overflow-hidden border backdrop-blur-xl ${isDark ? "border-zinc-800 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/50" : "border-purple-100 bg-white/95 text-zinc-950 shadow-[0_24px_80px_rgba(91,33,182,0.16)]"}`}>
         <div className="relative px-6 py-5 sm:px-8 sm:py-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
 
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
@@ -282,18 +283,18 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
 
           <form action={profileFormAction} className="mt-5 space-y-3">
             <div className="flex items-center gap-4">
-                  <div className="shrink-0">
+              <div className="shrink-0">
                 {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={preview} alt={user?.name ?? "Avatar"} className="h-20 w-20 object-cover shadow-md" />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center bg-linear-to-br from-purple-500 to-fuchsia-500 text-white text-xl font-bold shadow-md">
+                  <div className="flex h-20 w-20 items-center justify-center bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xl font-bold shadow-md">
                     {user?.name?.charAt(0) ?? "U"}
                   </div>
                 )}
               </div>
               <div className="flex-1">
-                <input name="name" defaultValue={user?.name ?? ""} className="block w-full border py-2.5 px-3 text-sm" placeholder="Full name" required />
+                <input name="name" defaultValue={user?.name ?? ""} className="block w-full border py-2.5 px-3 text-sm outline-none focus:border-purple-500" placeholder="Full name" required />
                 <p className="mt-2 text-sm text-zinc-400">Change display name or avatar.</p>
               </div>
             </div>
@@ -328,10 +329,10 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <button type="submit" disabled={profilePending} className={`w-full border px-4 py-2.5 text-sm font-bold ${isDark ? 'border-purple-500 bg-purple-500 text-zinc-950' : 'border-purple-600 bg-purple-600 text-white'}`}>
+              <button type="submit" disabled={profilePending} className={`w-full border px-4 py-2.5 text-sm font-bold transition hover:-translate-y-0.5 ${isDark ? 'border-purple-500 bg-purple-500 text-zinc-950 hover:bg-purple-400' : 'border-purple-600 bg-purple-600 text-white hover:bg-purple-700'}`}>
                 {profilePending ? 'Updating...' : 'Update Profile'}
               </button>
-              <button type="button" onClick={() => onOpenChange(false)} className={`inline-flex w-full items-center justify-center border px-4 py-2.5 text-sm font-bold ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-300' : 'border-zinc-300 bg-white text-zinc-700'}`}>
+              <button type="button" onClick={() => onOpenChange(false)} className={`inline-flex w-full items-center justify-center border px-4 py-2.5 text-sm font-bold transition hover:border-purple-300 ${isDark ? 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white' : 'border-zinc-300 bg-white text-zinc-700 hover:text-purple-600'}`}>
                 Cancel
               </button>
             </div>
@@ -349,7 +350,7 @@ export default function Navbar({ user }: NavbarProps) {
   const [passwordSheetOpen, setPasswordSheetOpen] = useState(false);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const { resolvedTheme } = useTheme();
-
+  const pathname = usePathname();
 
   const isDark = mounted && resolvedTheme === "dark";
 
@@ -373,12 +374,12 @@ export default function Navbar({ user }: NavbarProps) {
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 border-b backdrop-blur-xl transition-all duration-300 ${isScrolled
-          ? isDark
-            ? "border-zinc-800/80 bg-black/80 shadow-lg shadow-black/40 py-3"
-            : "border-purple-100 bg-white/80 shadow-md shadow-purple-500/5 py-3"
-          : isDark
-            ? "border-transparent bg-transparent py-5"
-            : "border-transparent bg-transparent py-5"
+        ? isDark
+          ? "border-zinc-800/80 bg-black/80 shadow-lg shadow-black/40 py-3"
+          : "border-purple-100 bg-white/80 shadow-md shadow-purple-500/5 py-3"
+        : isDark
+          ? "border-transparent bg-transparent py-5"
+          : "border-transparent bg-transparent py-5"
         }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -387,34 +388,27 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Navigation Items */}
         <nav className="hidden items-center gap-8 lg:flex">
-          {navItems.map((item) => (
-            item.label === "Dashboard" ? (
-              user ? (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`inline-flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${isDark
-                      ? "text-zinc-400 hover:text-purple-400"
-                      : "text-zinc-600 hover:text-purple-600"
-                    }`}
-                >
-                  <LayoutDashboard size={15} />
-                  {item.label}
-                </Link>
-              ) : null
-            ) : (
-              <a
+          {navItems.map((item) => {
+            const isActive = pathname && (pathname === item.href || pathname.startsWith(item.href + "/") || (item.href !== "/" && pathname.startsWith(item.href)));
+            const baseClass = isDark ? "text-zinc-400 hover:text-purple-400" : "text-zinc-600 hover:text-purple-600";
+            
+            // 👈 Active Classes Applied Here
+            const activeClass = isDark 
+              ? "text-purple-400 font-bold bg-purple-500/10 px-3 py-1.5 rounded-md border border-purple-500/20" 
+              : "text-purple-700 font-bold bg-purple-50 px-3 py-1.5 rounded-md border border-purple-200";
+
+            return (
+              <Link
                 key={item.label}
                 href={item.href}
-                className={`text-sm font-medium transition-colors duration-200 ${isDark
-                    ? "text-zinc-400 hover:text-purple-400"
-                    : "text-zinc-600 hover:text-purple-600"
-                  }`}
+                className={`inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${isActive ? activeClass : baseClass}`}
               >
+                {/* 👈 Dynamic Icons Added Here */}
+                <item.icon size={16} className={isActive ? "text-purple-500" : "opacity-70"} />
                 {item.label}
-              </a>
-            )
-          ))}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Dynamic Action Buttons */}
@@ -428,14 +422,14 @@ export default function Navbar({ user }: NavbarProps) {
                 <button
                   type="button"
                   className={`flex max-w-44 items-center gap-2 rounded-full border px-3 py-1.5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${isDark
-                      ? "border-zinc-800 bg-zinc-950 text-zinc-100 hover:border-purple-500/40 hover:bg-zinc-900"
-                      : "border-zinc-200 bg-white text-zinc-900 hover:border-purple-200 hover:bg-purple-50/40"
+                    ? "border-zinc-800 bg-zinc-950 text-zinc-100 hover:border-purple-500/40 hover:bg-zinc-900"
+                    : "border-zinc-200 bg-white text-zinc-900 hover:border-purple-200 hover:bg-purple-50/40"
                     }`}
                 >
                   {user?.image ? (
                     <Image src={user.image} alt={user.name || "Avatar"} width={28} height={28} className="rounded-full object-cover shadow-sm" />
                   ) : (
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-purple-500 to-fuchsia-500 text-[9px] font-bold uppercase text-white shadow-sm">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-[9px] font-bold uppercase text-white shadow-sm">
                       {user?.name?.charAt(0) || "U"}
                     </span>
                   )}
@@ -453,8 +447,8 @@ export default function Navbar({ user }: NavbarProps) {
                 {/* Dropdown Menu */}
                 <div
                   className={`invisible absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 translate-y-2 rounded-2xl border p-3 opacity-0 shadow-2xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${isDark
-                      ? "border-zinc-800 bg-zinc-950 shadow-black/50"
-                      : "border-zinc-200 bg-white shadow-gray-200/50"
+                    ? "border-zinc-800 bg-zinc-950 shadow-black/50"
+                    : "border-zinc-200 bg-white shadow-gray-200/50"
                     }`}
                 >
                   {/* User Email Card */}
@@ -482,8 +476,8 @@ export default function Navbar({ user }: NavbarProps) {
                       type="button"
                       onClick={() => setProfileSheetOpen(true)}
                       className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
-                          ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
-                          : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
+                        ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
+                        : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
                         }`}
                     >
                       <UserPlus size={16} />
@@ -494,8 +488,8 @@ export default function Navbar({ user }: NavbarProps) {
                       type="button"
                       onClick={() => setPasswordSheetOpen(true)}
                       className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
-                          ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
-                          : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
+                        ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
+                        : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
                         }`}
                     >
                       <Key size={16} />
@@ -506,8 +500,8 @@ export default function Navbar({ user }: NavbarProps) {
                       <button
                         type="submit"
                         className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
-                            ? "border-transparent bg-zinc-900 text-red-400 hover:border-red-500/50 hover:bg-red-950/30"
-                            : "border-transparent bg-red-50 text-red-600 hover:border-red-200 hover:bg-red-100"
+                          ? "border-transparent bg-zinc-900 text-red-400 hover:border-red-500/50 hover:bg-red-950/30"
+                          : "border-transparent bg-red-50 text-red-600 hover:border-red-200 hover:bg-red-100"
                           }`}
                       >
                         <LogOut size={16} />
@@ -526,8 +520,8 @@ export default function Navbar({ user }: NavbarProps) {
               <Link
                 href="/login"
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${isDark
-                    ? "border-zinc-800 bg-black text-zinc-300 hover:border-purple-500/50 hover:text-purple-400"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"
+                  ? "border-zinc-800 bg-black text-zinc-300 hover:border-purple-500/50 hover:text-purple-400"
+                  : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"
                   }`}
               >
                 <LogIn size={15} /> Login
@@ -536,8 +530,8 @@ export default function Navbar({ user }: NavbarProps) {
               <Link
                 href="/register"
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 ${isDark
-                    ? "bg-purple-600 text-black shadow-purple-900/20 hover:bg-purple-500"
-                    : "bg-purple-600 text-white shadow-purple-600/10 hover:bg-purple-700"
+                  ? "bg-purple-600 text-black shadow-purple-900/20 hover:bg-purple-500"
+                  : "bg-purple-600 text-white shadow-purple-600/10 hover:bg-purple-700"
                   }`}
               >
                 <UserPlus size={15} /> Get Started
