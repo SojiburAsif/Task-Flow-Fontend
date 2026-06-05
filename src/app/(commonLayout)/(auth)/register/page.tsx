@@ -6,6 +6,8 @@ import { User, Mail, Lock, Upload, ChevronDown, Eye, EyeOff } from 'lucide-react
 import Logo from '@/components/shared/logo/logo';
 import { useTheme } from '@/components/provider/theme-provider';
 import { registerAction } from '@/services/auth.service';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { Role } from '@/app/constants/role';
 import { uploadToImgbb } from '@/lib/imageUpload.utils';
 
@@ -28,6 +30,14 @@ export default function RegisterPage() {
   const isDark = mounted && resolvedTheme === 'dark';
   const [state, formAction, isPending] = React.useActionState(registerAction, initialAuthState);
   const authState = state ?? initialAuthState;
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (authState.success) {
+      toast.success(authState.message || 'Account created');
+      router.push('/dashboard');
+    }
+  }, [authState.success]);
 
   React.useEffect(() => {
     const frame = window.requestAnimationFrame(() => setMounted(true));

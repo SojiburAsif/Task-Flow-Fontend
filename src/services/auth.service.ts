@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 import { publicEnv } from "@/lib/env";
 import { authCookieNames, buildAuthErrorMessage, getJwtMaxAgeInSeconds } from "@/lib/authUtils";
@@ -173,7 +172,10 @@ export const loginAction = async (prevState: AuthActionState = initialAuthState,
 		return getErrorState(error instanceof Error ? error.message : "Unable to sign in");
 	}
 
-	redirect("/dashboard");
+	return {
+		success: true,
+		message: "Signed in successfully",
+	} as AuthActionState;
 };
 
 export const registerAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {
@@ -206,7 +208,10 @@ export const registerAction = async (prevState: AuthActionState = initialAuthSta
 		return getErrorState(error instanceof Error ? error.message : "Unable to create account");
 	}
 
-	redirect("/dashboard");
+	return {
+		success: true,
+		message: "Account created successfully",
+	} as AuthActionState;
 };
 
 export const demoLoginAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {
@@ -226,7 +231,10 @@ export const demoLoginAction = async (prevState: AuthActionState = initialAuthSt
 		return getErrorState(error instanceof Error ? error.message : "Unable to sign in as demo user");
 	}
 
-	redirect("/dashboard");
+	return {
+		success: true,
+		message: "Signed in successfully",
+	} as AuthActionState;
 };
 
 export const changePasswordAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {
@@ -296,5 +304,9 @@ export const updateProfileAction = async (prevState: AuthActionState = initialAu
 export const logoutAction = async () => {
 	await revokeBackendSession();
 	await clearAuthCookies();
-	redirect("/login");
+
+	return {
+		success: true,
+		message: "Logged out successfully",
+	} as AuthActionState;
 };

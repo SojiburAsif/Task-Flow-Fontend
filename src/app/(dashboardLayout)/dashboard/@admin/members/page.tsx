@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { Toaster } from "sonner"; // 👈 Sonner Toaster ইমপোর্ট করা হয়েছে
 import { getUsers } from "@/services/user.service";
 import { getCurrentUser } from "@/lib/currentUser";
 import type { UserProfile } from "@/services/user.service";
@@ -19,18 +20,20 @@ export default async function AllMemberPage() {
   const currentUser = await getCurrentUser();
 
   // কারেন্ট অ্যাডমিনকে লিস্ট থেকে বাদ দেওয়ার লজিক
-  const otherUsers = users.filter(u => u.id !== currentUser?.id);
+  const otherUsers = users.filter((u) => u.id !== currentUser?.id);
 
   // ইউজারদের স্ট্যাটাস অনুযায়ী দুটি আলাদা লিস্টে ভাগ করা
-  const activeUsers = otherUsers.filter(u => u.status === "ACTIVE");
-  const inactiveUsers = otherUsers.filter(u => u.status === "INACTIVE");
+  const activeUsers = otherUsers.filter((u) => u.status === "ACTIVE");
+  const inactiveUsers = otherUsers.filter((u) => u.status === "INACTIVE");
 
   return (
     <div className="min-h-screen bg-zinc-50 pt-24 pb-12 px-4 transition-colors duration-300 dark:bg-black sm:px-6 lg:px-8">
+      {/* 👈 Sonner Toaster ইনিশিয়ালাইজ করা হলো */}
+      <Toaster position="top-center" richColors theme="system" /> 
+
       <div className="mx-auto w-full max-w-5xl space-y-10">
-        
         {/* =========================================
-            সেন্ট্রাল হেডার সেকশন (Sharp Purple Thimed)
+            সেন্ট্রাল হেডার সেকশন (Sharp Purple Themed)
         ============================================= */}
         <div className="flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:text-left border-b border-zinc-200 pb-8 dark:border-zinc-800">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-none border border-purple-500/20 bg-purple-600 text-white shadow-none dark:border-purple-500/50">
@@ -51,7 +54,7 @@ export default async function AllMemberPage() {
           </div>
         </div>
 
-        {/* ওয়ান ক্যাচ: এম্পটি স্টেট */}
+        {/* এম্পটি স্টেট */}
         {otherUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-none border border-dashed border-zinc-300 bg-white/50 py-20 text-center dark:border-zinc-800 dark:bg-zinc-950/30">
             <div className="mb-4 flex h-16 w-16 items-center justify-center border border-zinc-200 bg-zinc-100 rounded-none dark:border-zinc-700 dark:bg-zinc-900">
@@ -65,7 +68,7 @@ export default async function AllMemberPage() {
         )}
 
         {/* =========================================
-            ACTIVE USERS SECTION (Purple Accent Highlight)
+            ACTIVE USERS SECTION
         ============================================= */}
         {activeUsers.length > 0 && (
           <div className="space-y-4">
@@ -105,7 +108,6 @@ export default async function AllMemberPage() {
             </div>
           </div>
         )}
-        
       </div>
     </div>
   );
@@ -114,15 +116,16 @@ export default async function AllMemberPage() {
 /* =========================================
    USER CARD SUB-COMPONENT (Sharp Purple Design)
 ============================================= */
-function UserCard({ user, isActive }: { user: UserProfile, isActive: boolean }) {
+function UserCard({ user, isActive }: { user: UserProfile; isActive: boolean }) {
   return (
-    <div className={cn(
-      "flex flex-col justify-between gap-5 rounded-none border bg-white p-5 shadow-none transition-all hover:shadow-sm dark:bg-zinc-950 md:flex-row md:items-center",
-      isActive 
-        ? "border-zinc-200 hover:border-purple-400 dark:border-zinc-800 dark:hover:border-purple-900/50" 
-        : "border-rose-200/60 bg-rose-50/20 hover:border-rose-300 dark:border-rose-900/30 dark:bg-rose-950/10 dark:hover:border-rose-900/60"
-    )}>
-      
+    <div
+      className={cn(
+        "flex flex-col justify-between gap-5 rounded-none border bg-white p-5 shadow-none transition-all hover:shadow-sm dark:bg-zinc-950 md:flex-row md:items-center",
+        isActive
+          ? "border-zinc-200 hover:border-purple-400 dark:border-zinc-800 dark:hover:border-purple-900/50"
+          : "border-rose-200/60 bg-rose-50/20 hover:border-rose-300 dark:border-rose-900/30 dark:bg-rose-950/10 dark:hover:border-rose-900/60"
+      )}
+    >
       {/* বাম পাশ: প্রোফাইল ইনফো */}
       <div className="flex min-w-0 w-full items-center gap-4 md:w-auto">
         {user.image ? (
@@ -139,8 +142,19 @@ function UserCard({ user, isActive }: { user: UserProfile, isActive: boolean }) 
                 : "border-rose-200 bg-rose-100 dark:border-rose-900/50 dark:bg-rose-900/30"
             )}
           />
-        ) : null}
-        
+        ) : (
+          <div
+            className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-none border text-sm font-black",
+              isActive
+                ? "border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                : "border-rose-200 bg-rose-100 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/30 dark:text-rose-400"
+            )}
+          >
+            {(user.name || user.email).substring(0, 2).toUpperCase()}
+          </div>
+        )}
+
         <div className="min-w-0 space-y-1.5">
           <div>
             <p className={cn("truncate text-base font-bold", isActive ? "text-zinc-900 dark:text-white" : "text-zinc-700 dark:text-zinc-300")}>
@@ -156,18 +170,21 @@ function UserCard({ user, isActive }: { user: UserProfile, isActive: boolean }) 
             <span className={cn("inline-flex rounded-none border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider", roleBadges[user.role] || "bg-zinc-50 border-zinc-200")}>
               {user.role === "ProjectManager" ? "Project Manager" : user.role === "TeamMember" ? "Team Member" : user.role}
             </span>
-            <span className={cn("inline-flex rounded-none border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
-              isActive
-                ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-900/50"
-                : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50"
-            )}>
+            <span
+              className={cn(
+                "inline-flex rounded-none border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                isActive
+                  ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-900/50"
+                  : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50"
+              )}
+            >
               {user.status}
             </span>
           </div>
         </div>
       </div>
 
-     
+   
       <MemberRow user={user} />
     </div>
   );

@@ -11,6 +11,7 @@ import { ModeToggle } from "../Theme/Toogle";
 import { useTheme } from "@/components/provider/theme-provider";
 import { changePasswordAction, logoutAction, updateProfileAction, type AuthActionState } from "@/services/auth.service";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import type { CurrentUser } from "@/lib/currentUser";
 import { useActionState } from "react";
 import { Role } from "@/app/constants/role";
@@ -92,7 +93,7 @@ function PasswordChangeModal({ open, onOpenChange, isDark }: PasswordChangeModal
 
       <div className={`relative z-61 w-full max-w-lg overflow-hidden border backdrop-blur-xl ${isDark ? "border-zinc-800 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/50" : "border-purple-100 bg-white/95 text-zinc-950 shadow-[0_24px_80px_rgba(91,33,182,0.16)]"}`}>
         <div className="relative px-6 py-5 sm:px-8 sm:py-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-transparent" />
 
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
@@ -252,7 +253,7 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
 
       <div className={`relative z-61 w-full max-w-lg overflow-hidden border backdrop-blur-xl ${isDark ? "border-zinc-800 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/50" : "border-purple-100 bg-white/95 text-zinc-950 shadow-[0_24px_80px_rgba(91,33,182,0.16)]"}`}>
         <div className="relative px-6 py-5 sm:px-8 sm:py-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-transparent" />
 
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
@@ -288,7 +289,7 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={preview} alt={user?.name ?? "Avatar"} className="h-20 w-20 object-cover shadow-md" />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xl font-bold shadow-md">
+                  <div className={`flex h-20 w-20 items-center justify-center ${isDark ? 'bg-zinc-700 text-white' : 'bg-zinc-200 text-zinc-900'} text-xl font-bold shadow-md`}>
                     {user?.name?.charAt(0) ?? "U"}
                   </div>
                 )}
@@ -298,7 +299,6 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
                 <p className="mt-2 text-sm text-zinc-400">Change display name or avatar.</p>
               </div>
             </div>
-
             <div>
               <input
                 name="avatar"
@@ -353,6 +353,20 @@ export default function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
 
   const isDark = mounted && resolvedTheme === "dark";
+  // Logout action state (hooks must be at top-level of component)
+  const [logoutState, logoutFormAction, logoutPending] = useActionState<AuthActionState, FormData>(logoutAction, {
+    success: false,
+    message: "",
+  });
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (logoutState?.success) {
+      toast.success(logoutState.message || "Logged out");
+      setTimeout(() => router.push("/login"), 0);
+    }
+  }, [logoutState?.success, logoutState?.message, router]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -388,7 +402,12 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Navigation Items */}
         <nav className="hidden items-center gap-8 lg:flex">
-          {navItems.map((item) => {
+          {(() => {
+            const itemsToShow = user
+              ? navItems
+              : navItems.filter(i => ['Home', 'Features', 'About'].includes(i.label));
+
+            return itemsToShow.map((item) => {
             const isActive = pathname && (pathname === item.href || pathname.startsWith(item.href + "/") || (item.href !== "/" && pathname.startsWith(item.href)));
             const baseClass = isDark ? "text-zinc-400 hover:text-purple-400" : "text-zinc-600 hover:text-purple-600";
             
@@ -397,18 +416,19 @@ export default function Navbar({ user }: NavbarProps) {
               ? "text-purple-400 font-bold bg-purple-500/10 px-3 py-1.5 rounded-md border border-purple-500/20" 
               : "text-purple-700 font-bold bg-purple-50 px-3 py-1.5 rounded-md border border-purple-200";
 
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${isActive ? activeClass : baseClass}`}
-              >
-                {/* 👈 Dynamic Icons Added Here */}
-                <item.icon size={16} className={isActive ? "text-purple-500" : "opacity-70"} />
-                {item.label}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${isActive ? activeClass : baseClass}`}
+                >
+                  {/* Dynamic Icons */}
+                  <item.icon size={16} className={isActive ? "text-purple-500" : "opacity-70"} />
+                  {item.label}
+                </Link>
+              );
+            });
+          })()}
         </nav>
 
         {/* Dynamic Action Buttons */}
@@ -429,7 +449,7 @@ export default function Navbar({ user }: NavbarProps) {
                   {user?.image ? (
                     <Image src={user.image} alt={user.name || "Avatar"} width={28} height={28} className="rounded-full object-cover shadow-sm" />
                   ) : (
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-[9px] font-bold uppercase text-white shadow-sm">
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isDark ? 'bg-zinc-700 text-white' : 'bg-zinc-200 text-zinc-900'} text-[9px] font-bold uppercase shadow-sm`}>
                       {user?.name?.charAt(0) || "U"}
                     </span>
                   )}
@@ -496,16 +516,18 @@ export default function Navbar({ user }: NavbarProps) {
                       Change Password
                     </button>
 
-                    <form action={logoutAction}>
+                    {/* Logout form (uses logout hooks declared at component top) */}
+                    <form action={logoutFormAction}>
                       <button
                         type="submit"
+                        disabled={logoutPending}
                         className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
                           ? "border-transparent bg-zinc-900 text-red-400 hover:border-red-500/50 hover:bg-red-950/30"
                           : "border-transparent bg-red-50 text-red-600 hover:border-red-200 hover:bg-red-100"
                           }`}
                       >
                         <LogOut size={16} />
-                        Logout
+                        {logoutPending ? "Logging out..." : "Logout"}
                       </button>
                     </form>
                   </div>
