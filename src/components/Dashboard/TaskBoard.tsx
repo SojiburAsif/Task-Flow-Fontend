@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useActionState } from "react";
-import { CircleDashed, CircleCheckBig, Clock3, TriangleAlert } from "lucide-react";
+import React, { useActionState, useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, CircleCheckBig, CircleDashed, Clock3, FolderGit2, LayoutList, Plus, TriangleAlert, Users2, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { TaskTable } from "@/components/Dashboard/TaskTable";
 import { createTaskAction } from "@/services/task.actions";
-import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 import type { ProjectRecord } from "@/services/project.service";
-import type { UserProfile } from "@/services/user.service";
-
-
+import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 
 type TaskBoardProps = {
 	tasks: TaskRecord[];
@@ -24,7 +19,6 @@ type TaskBoardProps = {
 	statusEditable?: boolean;
 	canCreateTask?: boolean;
 	projects?: ProjectRecord[];
-	users?: UserProfile[];
 	allowAssignmentEdit?: boolean;
 	allowTaskEdit?: boolean;
 };
@@ -34,7 +28,10 @@ const normalizeStatus = (status?: string | null): TaskStatusValue => {
 	return "Todo";
 };
 
-const isOverdue = (task: TaskRecord) => normalizeStatus(task.status) !== "Completed" && new Date(task.dueDate).getTime() < Date.now();
+const formatDate = (value?: string | null) => {
+	if (!value) return "No deadline";
+	return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
 
 export function TaskBoard({
 	tasks,
@@ -48,56 +45,117 @@ export function TaskBoard({
 	allowAssignmentEdit = false,
 	allowTaskEdit = false,
 }: TaskBoardProps) {
-	const stats = {
-		total: tasks.length,
-		todo: tasks.filter(task => normalizeStatus(task.status) === "Todo").length,
-		inProgress: tasks.filter(task => normalizeStatus(task.status) === "InProgress").length,
-		completed: tasks.filter(task => normalizeStatus(task.status) === "Completed").length,
-		overdue: tasks.filter(isOverdue).length,
-	};
+	const [openProjectModal, setOpenProjectModal] = useState<ProjectRecord | null>(null);
+
+	const stats = useMemo(
+		() => ({
+			total: tasks.length,
+			todo: tasks.filter((task) => normalizeStatus(task.status) === "Todo").length,
+			inProgress: tasks.filter((task) => normalizeStatus(task.status) === "InProgress").length,
+			completed: tasks.filter((task) => normalizeStatus(task.status) === "Completed").length,
+			overdue: tasks.filter((task) => normalizeStatus(task.status) !== "Completed" && new Date(task.dueDate).getTime() < Date.now()).length,
+		}),
+		[tasks],
+	);
+
+	const projectStats = useMemo(() => {
+		if (!projects?.length) return { total: 0, members: 0 };
+		return {
+			total: projects.length,
+			members: projects.reduce((count, project) => count + (project.members?.length ?? 0), 0),
+		};
+	}, [projects]);
+
+	const firstProject = projects?.[0] ?? null;
 
 	return (
 		<>
-		<section className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-			<div className="absolute inset-x-4 top-0 h-px bg-linear-to-r from-transparent via-purple-400/80 to-transparent" />
+			<section className="relative w-full overflow-hidden">
+				<div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.14),transparent_32%),radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.94),rgba(248,248,248,0.76))] dark:bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_32%),radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_26%),linear-gradient(to_bottom,rgba(9,9,11,0.98),rgba(24,24,27,0.94))]" />
+				<div className="pointer-events-none absolute -left-24 top-16 h-64 w-64 rounded-full bg-fuchsia-500/10 blur-3xl dark:bg-fuchsia-500/12" />
+				<div className="pointer-events-none absolute -right-20 top-28 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl dark:bg-sky-500/12" />
 
-			<div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-				<div className="space-y-2">
-					<p className="text-xs font-semibold uppercase tracking-[0.3em] text-purple-500 dark:text-purple-400">{roleLabel}</p>
-					<h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-4xl">{title}</h1>
-					<p className="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">{description}</p>
-				</div>
-				<div className="flex items-center gap-3">
-					<div className="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-700 dark:text-purple-300">
-						{stats.total} task{stats.total === 1 ? "" : "s"} in view
+				<div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+					<div className="max-w-3xl space-y-3 rounded-3xl border border-white/60 bg-white/75 p-6 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/70">
+						<div className="inline-flex items-center gap-2 rounded-full border border-purple-500/15 bg-purple-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
+							{roleLabel}
+						</div>
+						<h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white sm:text-4xl">{title}</h1>
+						<p className="max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</p>
 					</div>
-					{canCreateTask ? <NewTaskButton projects={projects} /> : null}
+					<div className="flex shrink-0 flex-wrap items-center gap-3 rounded-3xl border border-zinc-200/80 bg-white/80 p-3 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+						<div className="inline-flex items-center justify-center rounded-2xl border border-purple-500/15 bg-purple-50 px-5 py-3 text-xs font-bold text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
+							{stats.total} Task{stats.total !== 1 ? "s" : ""} Tracked
+						</div>
+						{canCreateTask ? <NewTaskModal projects={projects} /> : null}
+					</div>
 				</div>
-			</div>
 
-			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-				{[
-					{ label: "Total", value: stats.total, icon: CircleDashed, tone: "from-purple-500 to-fuchsia-500" },
-					{ label: "In progress", value: stats.inProgress, icon: Clock3, tone: "from-sky-500 to-blue-500" },
-					{ label: "Completed", value: stats.completed, icon: CircleCheckBig, tone: "from-emerald-500 to-teal-500" },
-					{ label: "Overdue", value: stats.overdue, icon: TriangleAlert, tone: "from-rose-500 to-red-500" },
-				].map(item => (
-					<Card key={item.label} className="border border-zinc-200/80 bg-white/90 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/90">
-						<CardContent className="flex items-center gap-3 p-4">
-							<div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br ${item.tone} text-white shadow-lg shadow-purple-500/20`}>
-								<item.icon className="h-5 w-5" />
+				<div className="mb-8 grid gap-4 lg:grid-cols-2">
+					<button
+						type="button"
+						onClick={() => {
+							if (firstProject) setOpenProjectModal(firstProject);
+						}}
+						className="group flex items-center justify-between rounded-3xl border border-zinc-200/80 bg-white p-5 text-left shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:border-purple-900/50 dark:hover:bg-zinc-900"
+					>
+						<div className="flex items-center gap-4">
+							<div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300">
+								<FolderGit2 className="h-5 w-5" />
 							</div>
 							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">{item.label}</p>
-								<p className="text-2xl font-black text-zinc-950 dark:text-zinc-50">{item.value}</p>
+								<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Projects</p>
+								<p className="text-2xl font-black text-zinc-950 dark:text-white">{projectStats.total}</p>
 							</div>
-						</CardContent>
-					</Card>
-				))}
-			</div>
+						</div>
+						<ArrowUpRight className="h-5 w-5 text-zinc-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-purple-500" />
+					</button>
 
-			<Card className="mt-6 border border-zinc-200/80 bg-white/90 shadow-[0_24px_80px_rgba(91,33,182,0.10)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
-				<CardContent className="p-4 sm:p-6">
+					<div className="flex items-center justify-between rounded-3xl border border-zinc-200/80 bg-white p-5 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] dark:border-zinc-800/80 dark:bg-zinc-950">
+						<div className="flex items-center gap-4">
+							<div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
+								<Users2 className="h-5 w-5" />
+							</div>
+							<div>
+								<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Project Members</p>
+								<p className="text-2xl font-black text-zinc-950 dark:text-white">{projectStats.members}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+					{[
+						{ label: "To Do", value: stats.todo, icon: CircleDashed, tone: "text-purple-600 bg-purple-50 dark:bg-purple-900/20" },
+						{ label: "In Progress", value: stats.inProgress, icon: Clock3, tone: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" },
+						{ label: "Completed", value: stats.completed, icon: CircleCheckBig, tone: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" },
+						{ label: "Overdue", value: stats.overdue, icon: TriangleAlert, tone: "text-rose-600 bg-rose-50 dark:bg-rose-900/20" },
+					].map((item) => (
+						<div key={item.label} className="rounded-3xl border border-zinc-200/80 bg-white p-5 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] dark:border-zinc-800/80 dark:bg-zinc-950">
+							<div className="flex items-center gap-4">
+								<div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.tone}`}>
+									<item.icon className="h-5 w-5" />
+								</div>
+								<div>
+									<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{item.label}</p>
+									<p className="text-2xl font-black text-zinc-950 dark:text-white">{item.value}</p>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+
+				<div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] dark:border-zinc-800/80 dark:bg-zinc-950 sm:p-8">
+					<div className="mb-6 flex items-center gap-3">
+						<div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-900">
+							<LayoutList className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
+						</div>
+						<div>
+							<h2 className="text-lg font-bold text-zinc-900 dark:text-white">Task Board</h2>
+							<p className="text-xs text-zinc-500 dark:text-zinc-400">Manage and update your tasks below.</p>
+						</div>
+					</div>
+
 					<TaskTable
 						tasks={tasks}
 						returnTo={returnTo}
@@ -105,14 +163,88 @@ export function TaskBoard({
 						allowAssignmentEdit={allowAssignmentEdit}
 						allowTaskEdit={allowTaskEdit}
 					/>
-				</CardContent>
-			</Card>
-		</section>
+				</div>
+			</section>
+
+			<AnimatePresence>
+				{openProjectModal && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6"
+						onClick={() => setOpenProjectModal(null)}
+					>
+						<motion.div
+							initial={{ scale: 0.95, y: 20 }}
+							animate={{ scale: 1, y: 0 }}
+							exit={{ scale: 0.95, y: 20 }}
+							className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/60 px-6 py-5 dark:border-zinc-900 dark:bg-zinc-900/20 md:px-8">
+								<div className="space-y-1">
+									<p className="text-[10px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Project Details</p>
+									<h2 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white">{openProjectModal.name}</h2>
+									<p className="text-sm text-zinc-600 dark:text-zinc-400">Overview of the selected project and assigned members.</p>
+								</div>
+								<button onClick={() => setOpenProjectModal(null)} className="bg-zinc-100 p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white">
+									<X size={20} />
+								</button>
+							</div>
+
+							<div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-6 md:p-8">
+								<div className="grid gap-4 sm:grid-cols-3">
+									<div className="border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</p>
+										<p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{openProjectModal.status || "Active"}</p>
+									</div>
+									<div className="border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Deadline</p>
+										<p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{formatDate(openProjectModal.deadline)}</p>
+									</div>
+									<div className="border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Members</p>
+										<p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{openProjectModal.members?.length ?? 0}</p>
+									</div>
+								</div>
+
+								<div className="border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950/80">
+									<h3 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Description</h3>
+									<p className="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">{openProjectModal.description || "No project description available."}</p>
+								</div>
+
+								<div className="border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900/20">
+									<div className="mb-4 flex items-center justify-between">
+										<h3 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Team Members</h3>
+										<span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{openProjectModal.members?.length ?? 0} total</span>
+									</div>
+									{openProjectModal.members && openProjectModal.members.length > 0 ? (
+										<div className="grid gap-3 sm:grid-cols-2">
+											{openProjectModal.members.map((member) => (
+												<div key={member.id} className="flex items-center gap-3 border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
+													<div className="flex h-10 w-10 items-center justify-center bg-purple-100 font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">{(member.name || "U").charAt(0).toUpperCase()}</div>
+													<div className="min-w-0">
+														<p className="truncate text-sm font-bold text-zinc-950 dark:text-zinc-100">{member.name || "Unnamed User"}</p>
+														<p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{member.email}</p>
+													</div>
+												</div>
+											))}
+										</div>
+									) : (
+										<div className="border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">No team members assigned to this project.</div>
+									)}
+								</div>
+							</div>
+						</motion.div>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</>
 	);
 }
 
-function NewTaskButton({ projects }: { projects?: ProjectRecord[] }) {
+function NewTaskModal({ projects }: { projects?: ProjectRecord[] }) {
 	const [open, setOpen] = useState(false);
 	const [selectedProjectId, setSelectedProjectId] = useState<string | null>(projects && projects.length > 0 ? projects[0].id : null);
 	const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
@@ -121,107 +253,121 @@ function NewTaskButton({ projects }: { projects?: ProjectRecord[] }) {
 
 	useEffect(() => {
 		if (!actionState) return;
-
 		if (actionState.success) {
-			toast.success(actionState.message || "Task created");
-			// defer state updates to avoid synchronous setState-in-effect warnings
+			toast.success(actionState.message || "Task created successfully!");
 			const raf = window.requestAnimationFrame(() => {
 				setOpen(false);
 				setSelectedAssignee(null);
 			});
 			return () => window.cancelAnimationFrame(raf);
-		} else if (actionState.message) {
-			toast.error(actionState.message);
 		}
+		if (actionState.message) toast.error(actionState.message);
 	}, [actionState]);
 
 	return (
-		<div>
-			<Button onClick={() => setOpen(o => !o)} className="rounded-xl bg-green-600 text-white hover:bg-green-700">{open ? "Close" : "New Task"}</Button>
-			{open ? (
-				<div className="mt-3 rounded-2xl border border-zinc-200/60 bg-white/90 p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/90">
-					<form action={formAction} className="space-y-4">
-						<div className="grid gap-3 sm:grid-cols-2">
-							<input name="title" placeholder="Task title" className="h-11 rounded-xl border border-zinc-200 px-3 placeholder:text-zinc-400" required />
-							{projects && projects.length > 0 ? (
-								<select name="projectId" value={selectedProjectId ?? ""} onChange={(e) => { setSelectedProjectId(e.target.value || null); setSelectedAssignee(null); }} className="h-11 rounded-xl border border-zinc-200 px-3" required>
-									<option value="">Select project</option>
-									{projects.map(p => (
-										<option key={p.id} value={p.id}>{p.name}</option>
-									))}
-								</select>
-							) : (
-								<input name="projectId" placeholder="Project ID" className="h-11 rounded-xl border border-zinc-200 px-3 placeholder:text-zinc-400" required />
-							)}
-						</div>
-						<textarea name="description" placeholder="Short description" className="w-full rounded-xl border border-zinc-200 px-3 py-3 placeholder:text-zinc-400" />
-								<div className="grid gap-3 sm:grid-cols-3">
-									<input name="dueDate" type="date" className="h-11 rounded-xl border border-zinc-200 px-3" required />
-									<select name="priority" className="h-11 rounded-xl border border-zinc-200 px-3">
-										<option value="Medium">Medium</option>
-										<option value="High">High</option>
-										<option value="Low">Low</option>
-									</select>
-									{/* show only members of selected project in create form */}
-									{projects && selectedProjectId ? (
-										(() => {
-											const members = projects.find(p => p.id === selectedProjectId)?.members ?? [];
-											if (members.length > 0) {
-												return (
-													<select name="assignedToId" value={selectedAssignee ?? ""} onChange={(e) => setSelectedAssignee(e.target.value || null)} className="h-11 rounded-xl border border-zinc-200 px-3" >
-														<option value="">Unassigned</option>
-														{members.map(m => (
-															<option key={m.id} value={m.id}>{m.name || m.id}</option>
-														))}
-													</select>
-												);
-											}
+		<>
+			<button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-2xl bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-purple-700 active:scale-95">
+				<Plus size={14} /> New Task
+			</button>
 
-											return (
-												<select name="assignedToId" disabled className="h-11 rounded-xl border border-zinc-200 px-3 bg-zinc-50/60 text-zinc-500">
-													<option value="">No members in selected project</option>
-												</select>
-											);
-										})()
-									) : (
-										<select name="assignedToId" disabled className="h-11 rounded-xl border border-zinc-200 px-3 bg-zinc-50/60 text-zinc-500">
-											<option value="">Select a project to choose assignee</option>
-										</select>
-									)}
-									{/* ensure selected assignee is submitted even when chosen via member list */}
-									<input type="hidden" name="assignedToId" value={selectedAssignee ?? ""} />
-								</div>
-
-								{/* attachments */}
+			<AnimatePresence>
+				{open && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6"
+						onClick={() => setOpen(false)}
+					>
+						<motion.div
+							initial={{ scale: 0.95, y: 20 }}
+							animate={{ scale: 1, y: 0 }}
+							exit={{ scale: 0.95, y: 20 }}
+							className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-5 dark:border-zinc-900 dark:bg-zinc-900/20">
 								<div>
-									<label className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Attachments</label>
-									<input name="attachments" type="file" multiple className="mt-2 w-full" />
+									<h2 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">Create New Task</h2>
+									<p className="mt-1 text-xs text-zinc-500">Assign a task to a project member</p>
 								</div>
+								<button onClick={() => setOpen(false)} className="bg-zinc-100 p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white">
+									<X size={20} />
+								</button>
+							</div>
 
-								{/* members side list */}
-								{projects && projects.length > 0 ? (
-									<div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-										<div />
-										<div className="rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">
-											<div className="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Project members</div>
-											<div className="flex max-h-44 flex-col gap-2 overflow-auto">
-												{(projects.find(p => p.id === selectedProjectId)?.members ?? []).map(member => (
-													<button key={member.id} type="button" onClick={() => setSelectedAssignee(member.id)} className={`text-left rounded-md px-3 py-2 transition ${selectedAssignee === member.id ? 'bg-purple-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-														{member.name || member.id}
-														<div className="text-xs text-zinc-500 dark:text-zinc-400">{member.id}</div>
-													</button>
-												))}
-											</div>
+							<form action={formAction} className="flex flex-1 flex-col overflow-hidden">
+								<div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-6">
+									<div className="space-y-2">
+										<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Task Title</label>
+										<input name="title" placeholder="e.g. Design Homepage" required className="w-full border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white" />
+									</div>
+
+									<div className="space-y-2">
+										<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Project Selection</label>
+										{projects && projects.length > 0 ? (
+											<select name="projectId" value={selectedProjectId ?? ""} onChange={(e) => { setSelectedProjectId(e.target.value || null); setSelectedAssignee(null); }} required className="w-full cursor-pointer appearance-none border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white">
+												<option value="">Select project</option>
+												{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+											</select>
+										) : (
+											<input name="projectId" placeholder="Project ID" required className="w-full border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white" />
+										)}
+									</div>
+
+									<div className="space-y-2">
+										<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Description</label>
+										<textarea name="description" placeholder="Short description" rows={3} className="w-full resize-none border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white" />
+									</div>
+
+									<div className="grid gap-5 sm:grid-cols-2">
+										<div className="space-y-2">
+											<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Due Date</label>
+											<input name="dueDate" type="date" required className="w-full appearance-none border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white" />
+										</div>
+										<div className="space-y-2">
+											<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Priority</label>
+											<select name="priority" className="w-full cursor-pointer appearance-none border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-purple-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white">
+												<option value="Medium">Medium</option>
+												<option value="High">High</option>
+												<option value="Low">Low</option>
+											</select>
 										</div>
 									</div>
-								) : null}
-							<div className="flex items-center gap-3">
-								<Button type="submit" disabled={isPending} className="rounded-xl bg-linear-to-r from-purple-600 to-pink-500 text-white shadow-lg px-4 py-2">{isPending ? "Creating..." : "Create task"}</Button>
-								<Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-							</div>
-					</form>
-				</div>
-			) : null}
-		</div>
+
+									<div className="space-y-2 pt-2">
+										<label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Assign Member</label>
+										<input type="hidden" name="assignedToId" value={selectedAssignee ?? ""} />
+										{projects && selectedProjectId ? (() => {
+											const members = projects.find((project) => project.id === selectedProjectId)?.members ?? [];
+											if (members.length > 0) {
+												return (
+													<div className="grid max-h-32 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+														{members.map((member) => (
+															<button key={member.id} type="button" onClick={() => setSelectedAssignee(member.id)} className={`flex items-center gap-2 border p-2 text-left transition-all ${selectedAssignee === member.id ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30" : "border-zinc-200 bg-white hover:border-purple-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-purple-700"}`}>
+																<div className="flex h-6 w-6 shrink-0 items-center justify-center bg-zinc-100 text-[10px] font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{(member.name || "U").charAt(0)}</div>
+																<span className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-100">{member.name || member.id}</span>
+															</button>
+														))}
+													</div>
+												);
+											}
+											return <p className="text-xs italic text-zinc-500">No members found in this project.</p>;
+										})() : (
+											<p className="text-xs italic text-zinc-500">Select a project first to view members.</p>
+										)}
+									</div>
+								</div>
+
+								<div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50/50 px-6 py-4 dark:border-zinc-900 dark:bg-zinc-900/20">
+									<button type="button" onClick={() => setOpen(false)} disabled={isPending} className="px-5 py-2.5 text-sm font-bold text-zinc-600 transition hover:bg-zinc-100 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800">Cancel</button>
+									<button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50">{isPending ? "Creating..." : "Create Task"}</button>
+								</div>
+							</form>
+						</motion.div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</>
 	);
 }

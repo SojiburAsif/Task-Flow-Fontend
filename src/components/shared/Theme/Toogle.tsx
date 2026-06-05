@@ -44,13 +44,13 @@ export function ModeToggle() {
         }`}
       aria-label="Toggle theme"
     >
-      {/* স্লাইডিং ব্যাকগ্রাউন্ড সার্কেল (The Pill Slider) */}
+  
       <span
         className={`absolute top-0.5 bottom-0.5 left-0.5 w-7 rounded-full shadow-md transition-transform duration-300 ease-in-out
           ${isDark ? "translate-x-7 bg-zinc-900 border border-zinc-800" : "translate-x-0 bg-white"}`}
       />
 
-      {/* আইকন কন্টেইনার - যা আইকন দুটিকে দুই পাশে সমান দূরত্বে সুন্দরভাবে ধরে রাখবে */}
+     
       <div className="relative z-10 flex h-full w-full items-center justify-between px-2">
         {/* Sun Icon */}
         <Sun 

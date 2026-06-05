@@ -7,7 +7,7 @@ import { useActionState } from "react";
 import { toast } from "sonner";
 import type { UserProfile } from "@/services/user.service";
 import { updateUserByAdminAction_fromState, deleteUserByAdminAction_fromState } from "@/services/user.actions";
-import { Save, Trash2, Settings2, UserCheck, Loader2 } from "lucide-react";
+import { Save, Trash2, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,22 +44,9 @@ export default function MemberRow({ user }: Props) {
       {/* Update form */}
       <form action={updateAction} className="flex items-center gap-3 flex-1 sm:flex-none w-full sm:w-auto">
         <input type="hidden" name="id" value={user.id} />
+        <input type="hidden" name="role" value={user.role} />
 
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <select
-              name="role"
-              defaultValue={user.role}
-              disabled={updatePending || deletePending}
-              className="appearance-none bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-purple-500"
-            >
-              <option value="ADMIN">Admin</option>
-              <option value="ProjectManager">Project Manager</option>
-              <option value="TeamMember">Team Member</option>
-            </select>
-            <Settings2 size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-          </div>
-
           <div className="relative">
             <select
               name="status"

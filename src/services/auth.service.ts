@@ -169,10 +169,11 @@ export const loginAction = async (prevState: AuthActionState = initialAuthState,
 	try {
 		const result = await requestAuth("/login", parsed.data);
 		await setAuthCookies(result, parsed.data.rememberMe);
-		redirect("/dashboard");
 	} catch (error) {
 		return getErrorState(error instanceof Error ? error.message : "Unable to sign in");
 	}
+
+	redirect("/dashboard");
 };
 
 export const registerAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {
@@ -201,10 +202,11 @@ export const registerAction = async (prevState: AuthActionState = initialAuthSta
 	try {
 		const result = await requestAuth("/register", buildRegisterPayload(parsed.data));
 		await setAuthCookies(result, parsed.data.rememberMe);
-		redirect("/dashboard");
 	} catch (error) {
 		return getErrorState(error instanceof Error ? error.message : "Unable to create account");
 	}
+
+	redirect("/dashboard");
 };
 
 export const demoLoginAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {
@@ -220,10 +222,11 @@ export const demoLoginAction = async (prevState: AuthActionState = initialAuthSt
 	try {
 		const result = await requestAuth(`/demo-login/${parsed.data.role}`, {});
 		await setAuthCookies(result, true);
-		redirect("/dashboard");
 	} catch (error) {
 		return getErrorState(error instanceof Error ? error.message : "Unable to sign in as demo user");
 	}
+
+	redirect("/dashboard");
 };
 
 export const changePasswordAction = async (prevState: AuthActionState = initialAuthState, formData: FormData) => {

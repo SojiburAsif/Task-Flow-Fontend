@@ -70,21 +70,21 @@ export function AppSidebar({
   return (
     <Sidebar
       {...props}
-      className="sticky top-0 h-screen overflow-auto border-r border-slate-200 bg-white text-black transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.10),transparent_42%)] before:content-[''] dark:border-zinc-800 dark:bg-black dark:text-white dark:before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.16),transparent_42%)]"
+      className="sticky top-0 h-screen overflow-auto border-r border-zinc-200/80 bg-white/95 text-zinc-950 shadow-[0_24px_80px_rgba(91,33,182,0.08)] transition-all duration-300 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.10),transparent_42%)] before:content-[''] dark:border-zinc-800 dark:bg-zinc-950/95 dark:text-zinc-50 dark:shadow-black/30 dark:before:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.16),transparent_42%)]"
     >
      
-      <SidebarHeader className="border-b border-slate-100 bg-white px-5 py-6 text-black dark:border-zinc-800 dark:bg-black dark:text-white">
+      <SidebarHeader className="border-b border-zinc-100 bg-white/90 px-5 py-6 text-zinc-950 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:text-zinc-50">
         <div className="group flex items-center gap-3">
           <Logo />
         </div>
       </SidebarHeader>
 
 
-      <SidebarContent className="bg-white px-3 py-4 text-black dark:bg-black dark:text-white">
+      <SidebarContent className="bg-white/90 px-3 py-4 text-zinc-950 dark:bg-zinc-950/90 dark:text-zinc-50">
         <div className="space-y-6">
           {currentRoutes && currentRoutes.map((group: any) => (
             <SidebarGroup key={group.title} className="p-0">
-              <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-black dark:text-white">
+              <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-700 dark:text-zinc-300">
                 {group.title}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -105,14 +105,14 @@ export function AppSidebar({
                               "group flex h-12 w-full items-center gap-3 border border-transparent px-3 text-sm font-bold transition-all duration-200 rounded-none overflow-hidden",
                               isActive
                                 ? "bg-linear-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/20 dark:from-purple-500 dark:to-violet-600 dark:text-zinc-950"
-                                : "text-black hover:bg-slate-50 hover:text-purple-600 dark:text-white dark:hover:bg-zinc-900 dark:hover:text-purple-300"
+                                : "text-zinc-700 hover:bg-zinc-50 hover:text-purple-600 dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-purple-300"
                             )}
                           >
                             <Icon
                               size={18}
                               className={cn(
                                 "transition-transform duration-300 group-hover:scale-110 shrink-0",
-                                isActive ? "text-white dark:text-zinc-950" : "text-black dark:text-white"
+                                isActive ? "text-white dark:text-zinc-950" : "text-zinc-700 dark:text-zinc-200"
                               )}
                             />
                             <span className="truncate tracking-wide">{item.title}</span>
@@ -131,7 +131,7 @@ export function AppSidebar({
       </SidebarContent>
 
 
-      <SidebarFooter className="border-t border-slate-100 bg-white p-4 dark:border-zinc-900/60 dark:bg-black">
+      <SidebarFooter className="border-t border-zinc-100 bg-white/90 p-4 dark:border-zinc-900/60 dark:bg-zinc-950/90">
         <form action={logoutAction}>
           <SidebarLogoutButton />
         </form>

@@ -73,8 +73,8 @@ export function TaskEditForm({ task, mode, returnTo }: TaskEditFormProps) {
 	const statuses = canEditEverything ? allStatuses : allowedStatuses(currentStatus);
 
 	return (
-		<Card className="border-zinc-200/70 shadow-sm dark:border-zinc-800">
-			<CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+		<Card className="border border-zinc-200/70 bg-white/90 shadow-[0_24px_80px_rgba(91,33,182,0.10)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30">
+			<CardHeader className="border-b border-zinc-100 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/40">
 				<CardTitle className="flex items-center gap-3 text-xl text-zinc-950 dark:text-zinc-50">
 					<span>Task editor</span>
 					<Badge className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-purple-700 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-300">
@@ -182,7 +182,7 @@ export function TaskEditForm({ task, mode, returnTo }: TaskEditFormProps) {
 					)}
 
 					<div className="flex flex-wrap items-center gap-3">
-						<Button type="submit" className="rounded-xl bg-purple-600 px-5 font-bold text-white hover:bg-purple-700" disabled={pending}>
+						<Button type="submit" className="rounded-xl bg-purple-600 px-5 font-bold text-white hover:bg-purple-700 dark:bg-violet-500 dark:text-zinc-950 dark:hover:bg-violet-400" disabled={pending}>
 							{pending ? "Saving..." : canEditEverything ? "Save changes" : "Update status"}
 						</Button>
 						<Link href={returnTo} className="rounded-xl border border-zinc-200 px-5 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-purple-300 hover:text-purple-600 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-purple-500/60 dark:hover:text-purple-300">
