@@ -6,6 +6,7 @@ import { createProjectAction } from "@/services/project.actions";
 import type { UserProfile } from "@/services/user.service";
 import { CalendarDays, UserPlus, FolderKanban, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getProjectDetailsHref } from "@/lib/dashboard-links";
 
 type ActionState = { success: boolean; message: string; data?: Record<string, unknown> | null };
 
@@ -29,7 +30,7 @@ export default function CreateProjectForm({ teamMembers, returnTo = "/dashboard/
             const id = state.data?.id as string | undefined;
             window.setTimeout(() => {
                 if (id) {
-                    window.location.assign(`/dashboard/projects?view=${id}`);
+                    window.location.assign(getProjectDetailsHref(id));
                 } else {
                     window.location.assign(returnTo);
                 }
@@ -123,7 +124,7 @@ export default function CreateProjectForm({ teamMembers, returnTo = "/dashboard/
                     </div>
                     
                     <div className="p-6 flex-1 flex flex-col justify-between">
-                        <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        <div className="space-y-3 max-h-95 overflow-y-auto pr-2 custom-scrollbar flex-1">
                             {teamMembers.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full border border-dashed border-zinc-300 bg-zinc-50/50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-900/30">
                                     <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">No active contributors found</p>

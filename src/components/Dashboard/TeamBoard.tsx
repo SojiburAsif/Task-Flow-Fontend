@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useActionState } from "react";
 import { CircleDashed, CircleCheckBig, Clock3, TriangleAlert, Plus, X, CalendarDays, Flag, User, LayoutList, FolderGit2, Users2, ArrowUpRight, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { TaskTable } from "@/components/Dashboard/TaskTable";
-import ProjectEditForm from "@/components/Dashboard/ProjectEditForm";
+import ProjectEditModal from "@/components/Dashboard/ProjectEditModal";
+import { clearDashboardModalTarget, readDashboardModalTarget } from "@/components/shared/DashboardModalLink";
 import { createTaskAction } from "@/services/task.actions";
 import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 import type { ProjectRecord } from "@/services/project.service";
@@ -23,12 +23,11 @@ type TaskBoardProps = {
   canEdit?: boolean;
   statusEditable?: boolean;
   canCreateTask?: boolean;
-  initialProjectId?: string | null;
+  hideTaskSection?: boolean;
   projects?: ProjectRecord[];
   users?: UserProfile[];
   allowAssignmentEdit?: boolean;
   allowTaskEdit?: boolean;
-  hideTaskSection?: boolean;
 };
 
 const normalizeStatus = (status?: string | null): TaskStatusValue => {
@@ -71,12 +70,11 @@ export function TeamBoard({
   canEdit = false,
   statusEditable = false,
   canCreateTask = false,
-  initialProjectId = null,
+  hideTaskSection = false,
   projects,
   users,
   allowAssignmentEdit = false,
   allowTaskEdit = false,
-  hideTaskSection = false,
 }: TaskBoardProps) {
   const stats = {
     total: tasks.length,
@@ -96,10 +94,14 @@ export function TeamBoard({
 
   const [openTaskModal, setOpenTaskModal] = useState<TaskRecord | null>(null);
   const [openProjectModal, setOpenProjectModal] = useState<ProjectRecord | null>(null);
-  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectRecord | null>(null);
   const [projectFilter, setProjectFilter] = useState("All");
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [createTaskProjectId, setCreateTaskProjectId] = useState<string | null>(null);
+  const teamMembers = useMemo(() => (users ?? []).filter(user => {
+    const normalizedRole = user.role.replace(/[_\s-]+/g, "").toLowerCase();
+    return normalizedRole === "teammember";
+  }), [users]);
 
   // Filter and Sort Projects (Completed at the bottom)
   const displayProjects = useMemo(() => {
@@ -121,7 +123,7 @@ export function TeamBoard({
   const closeModals = () => {
     setOpenTaskModal(null);
     setOpenProjectModal(null);
-    setIsEditingProject(false);
+    setEditingProject(null);
     setCreateTaskOpen(false);
   };
 
@@ -131,17 +133,25 @@ export function TeamBoard({
   };
 
   useEffect(() => {
-    // If initialProjectId was provided by the server page, open that project modal when projects are loaded
-    if (!projects || projects.length === 0) return;
-    if (initialProjectId) {
-      const found = projects.find(p => p.id === initialProjectId);
-      if (found) {
-        // schedule on next frame to avoid synchronous setState inside effect
-        const rafId = window.requestAnimationFrame(() => setOpenProjectModal(found));
-        return () => window.cancelAnimationFrame(rafId);
-      }
+    const queuedTarget = readDashboardModalTarget();
+    if (!queuedTarget) return;
+
+    if (queuedTarget.type === "project") {
+      if (!projects || projects.length === 0) return;
+      const found = projects.find(project => project.id === queuedTarget.id);
+      clearDashboardModalTarget();
+      if (!found) return;
+      const rafId = window.requestAnimationFrame(() => setOpenProjectModal(found));
+      return () => window.cancelAnimationFrame(rafId);
     }
-  }, [projects, initialProjectId]);
+
+    if (!tasks || tasks.length === 0) return;
+    const found = tasks.find(task => task.id === queuedTarget.id);
+    clearDashboardModalTarget();
+    if (!found) return;
+    const rafId = window.requestAnimationFrame(() => setOpenTaskModal(found));
+    return () => window.cancelAnimationFrame(rafId);
+  }, [projects, tasks]);
 
   return (
     <>
@@ -309,41 +319,32 @@ export function TeamBoard({
           )}
         </div>
 
-        {/* =========================================
-            TASK TABLE CONTAINER
-        ============================================= */}
-        {!hideTaskSection && (
-          <div className="border border-zinc-200 bg-white p-6 shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 rounded-none dark:border-zinc-700 dark:bg-zinc-900">
-                <LayoutList className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
+        {!hideTaskSection ? (
+          <>
+            {/* =========================================
+                TASK TABLE CONTAINER
+            ============================================= */}
+            <div className="border border-zinc-200 bg-white p-6 shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 sm:p-8">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 rounded-none dark:border-zinc-700 dark:bg-zinc-900">
+                  <LayoutList className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Task Board</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Manage and update your tasks below.</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Task Board</h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Manage and update your tasks below.</p>
-              </div>
+
+              <TaskTable
+                tasks={tasks}
+                returnTo={returnTo}
+                statusEditable={statusEditable}
+                allowAssignmentEdit={allowAssignmentEdit}
+                allowTaskEdit={allowTaskEdit}
+              />
             </div>
-            
-            <TaskTable
-              tasks={tasks}
-              returnTo={returnTo}
-              statusEditable={statusEditable}
-              allowAssignmentEdit={allowAssignmentEdit}
-              allowTaskEdit={allowTaskEdit}
-            />
-          </div>
-        )}
-        {hideTaskSection && (
-          <div className="border border-zinc-200 bg-white p-6 shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 sm:p-8">
-            <TaskTable
-              tasks={tasks}
-              returnTo={returnTo}
-              statusEditable={statusEditable}
-              allowAssignmentEdit={allowAssignmentEdit}
-              allowTaskEdit={allowTaskEdit}
-            />
-          </div>
-        )}
+          </>
+        ) : null}
       </section>
 
       {/* =========================================
@@ -447,7 +448,10 @@ export function TeamBoard({
                   {canEdit ? (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); setIsEditingProject(true); }}
+                      onClick={() => {
+                        setEditingProject(openProjectModal);
+                        setOpenProjectModal(null);
+                      }}
                       className="inline-flex items-center gap-2 border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-700 transition hover:border-purple-300 hover:text-purple-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-purple-500/60 dark:hover:text-purple-300"
                     >
                       Edit project
@@ -469,83 +473,83 @@ export function TeamBoard({
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
-                {isEditingProject ? (
-                  // Render the edit form in-place inside the modal
-                  <ProjectEditForm
-                    project={openProjectModal}
-                    teamMembers={(users ?? []).filter(u => (u.role || "").replace(/[_\s-]+/g, "").toLowerCase() === "teammember")}
-                    onClose={() => { setIsEditingProject(false); setOpenProjectModal(null); }}
-                    returnTo={`/dashboard/projects?view=${openProjectModal.id}`}
-                  />
-                ) : (
-                  <>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</p>
-                        <p className={`mt-2 inline-flex px-2 py-0.5 border text-[10px] font-black uppercase tracking-wider rounded-none ${getStatusStyles(openProjectModal.status)}`}>
-                          {openProjectModal.status || "Active"}
-                        </p>
-                      </div>
-                      <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Deadline</p>
-                        <p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{formatDate(openProjectModal.deadline)}</p>
-                      </div>
-                      <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Members</p>
-                        <p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{openProjectModal.members?.length ?? 0}</p>
-                      </div>
-                    </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</p>
+                    <p className={`mt-2 inline-flex px-2 py-0.5 border text-[10px] font-black uppercase tracking-wider rounded-none ${getStatusStyles(openProjectModal.status)}`}>
+                      {openProjectModal.status || "Active"}
+                    </p>
+                  </div>
+                  <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Deadline</p>
+                    <p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{formatDate(openProjectModal.deadline)}</p>
+                  </div>
+                  <div className="border border-zinc-200 bg-zinc-50 p-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Members</p>
+                    <p className="mt-2 text-sm font-bold text-zinc-950 dark:text-white">{openProjectModal.members?.length ?? 0}</p>
+                  </div>
+                </div>
 
-                    <div className="border border-zinc-200 bg-white p-5 rounded-none dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Description</h3>
-                      <p className="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
-                        {openProjectModal.description || "No project description available."}
-                      </p>
-                    </div>
+                <div className="border border-zinc-200 bg-white p-5 rounded-none dark:border-zinc-800 dark:bg-zinc-950">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Description</h3>
+                  <p className="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+                    {openProjectModal.description || "No project description available."}
+                  </p>
+                </div>
 
-                    <div className="border border-zinc-200 bg-zinc-50 p-5 rounded-none dark:border-zinc-800 dark:bg-zinc-900/20">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Team Members</h3>
-                      </div>
-                      {openProjectModal.members && openProjectModal.members.length > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {openProjectModal.members.map((member) => (
-                            <div key={member.id} className="flex items-center gap-3 border border-zinc-200 bg-white p-3 rounded-none dark:border-zinc-700 dark:bg-zinc-950">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-blue-200 bg-blue-50 font-bold text-blue-700 rounded-none dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400 text-xs">
-                                {(member.name || "U").charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-zinc-950 dark:text-zinc-100">{member.name || "Unnamed User"}</p>
-                                <p className="truncate text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{member.email}</p>
-                              </div>
-                            </div>
-                          ))}
+                <div className="border border-zinc-200 bg-zinc-50 p-5 rounded-none dark:border-zinc-800 dark:bg-zinc-900/20">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Team Members</h3>
+                  </div>
+                  {openProjectModal.members && openProjectModal.members.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {openProjectModal.members.map((member) => (
+                        <div key={member.id} className="flex items-center gap-3 border border-zinc-200 bg-white p-3 rounded-none dark:border-zinc-700 dark:bg-zinc-950">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-blue-200 bg-blue-50 font-bold text-blue-700 rounded-none dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400 text-xs">
+                            {(member.name || "U").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-zinc-950 dark:text-zinc-100">{member.name || "Unnamed User"}</p>
+                            <p className="truncate text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{member.email}</p>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 rounded-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
-                          No team members assigned to this project.
-                        </div>
-                      )}
+                      ))}
                     </div>
+                  ) : (
+                    <div className="border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 rounded-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+                      No team members assigned to this project.
+                    </div>
+                  )}
+                </div>
 
-                    {canCreateTask ? (
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => openTaskCreator(openProjectModal.id)}
-                          className="inline-flex items-center gap-2 border border-purple-600 bg-purple-600 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-purple-700"
-                        >
-                          <Plus className="h-4 w-4" /> Add Task for This Project
-                        </button>
-                      </div>
-                    ) : null}
-                  </>
-                )}
+                {canCreateTask ? (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openTaskCreator(openProjectModal.id)}
+                      className="inline-flex items-center gap-2 border border-purple-600 bg-purple-600 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-purple-700"
+                    >
+                      <Plus className="h-4 w-4" /> Add Task for This Project
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ProjectEditModal
+        open={Boolean(editingProject)}
+        project={editingProject}
+        teamMembers={teamMembers}
+        returnTo={returnTo}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingProject(null);
+          }
+        }}
+      />
     </>
   );
 }
@@ -612,17 +616,7 @@ function NewTaskModal({
                 </button>
               </div>
 
-              <form
-                action={formAction}
-                onSubmit={(e) => {
-                  // Prevent creating a task without a selected assignee
-                  if (!selectedAssignee) {
-                    e.preventDefault();
-                    toast.error("Please assign a member before creating the task.");
-                  }
-                }}
-                className="flex flex-col flex-1 overflow-hidden"
-              >
+              <form action={formAction} className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
                   
                   <div className="space-y-2">
@@ -689,15 +683,11 @@ function NewTaskModal({
 
                 </div>
 
-                  <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50/50 px-6 py-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
+                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50/50 px-6 py-4 rounded-none dark:border-zinc-800 dark:bg-zinc-900/30">
                   <button type="button" onClick={() => onOpenChange(false)} disabled={isPending} className="border border-zinc-200 bg-white px-5 py-2.5 text-sm font-bold text-zinc-600 transition hover:bg-zinc-50 rounded-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isPending || !selectedAssignee}
-                    className="inline-flex items-center gap-2 border border-purple-600 bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-none transition hover:bg-purple-700 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button type="submit" disabled={isPending} className="inline-flex items-center gap-2 border border-purple-600 bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-none transition hover:bg-purple-700 rounded-none disabled:opacity-50 disabled:cursor-not-allowed">
                     {isPending ? "Creating..." : "Create Task"}
                   </button>
                 </div>
@@ -706,6 +696,7 @@ function NewTaskModal({
           </motion.div>
         )}
       </AnimatePresence>
+
     </>
   );
 }

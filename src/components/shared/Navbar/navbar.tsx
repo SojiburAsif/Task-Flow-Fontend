@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock, LineChart, Star, Activity, Info, HomeIcon } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock, LineChart, Star, Activity, Info, HomeIcon, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -15,6 +15,9 @@ import { useRouter } from "next/navigation";
 import type { CurrentUser } from "@/lib/currentUser";
 import { useActionState } from "react";
 import { Role } from "@/app/constants/role";
+import type { NotificationRecord } from "@/types/notification";
+import { queueDashboardModalTarget } from "@/components/shared/DashboardModalLink";
+import { getRoleDashboardHref } from "@/lib/dashboard-links";
 
 const navItems = [
   {label: "Home", href: "/", icon: HomeIcon}, 
@@ -46,6 +49,22 @@ type PasswordChangeModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isDark: boolean;
+};
+
+const formatNotificationTime = (value: string) => {
+  const createdAt = new Date(value).getTime();
+  const diffMinutes = Math.max(1, Math.floor((Date.now() - createdAt) / 60000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const hours = Math.floor(diffMinutes / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+
+  return `${Math.floor(hours / 24)}d ago`;
 };
 
 function PasswordChangeModal({ open, onOpenChange, isDark }: PasswordChangeModalProps) {
@@ -344,13 +363,185 @@ function ProfileModal({ open, onOpenChange, isDark, user }: PasswordChangeModalP
   );
 }
 
+// 👈 EMPTY SHARP NOTIFICATION MODAL COMPONENT ADDED
+type NotificationModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isDark: boolean;
+};
+
+function NotificationModal({ open, onOpenChange, isDark, user, notifications, loading, onRefresh }: NotificationModalProps & { user?: CurrentUser | null; notifications: NotificationRecord[]; loading: boolean; onRefresh: () => Promise<void> }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onOpenChange]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ readAll: true }),
+      });
+      await onRefresh();
+      toast.success("All notifications marked as read");
+    } catch {
+      toast.error("Failed to update notifications");
+    }
+  };
+
+  const handleOpenNotification = async (notification: NotificationRecord) => {
+    try {
+      if (!notification.isRead) {
+        await fetch("/api/notifications", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: notification.id }),
+        });
+        await onRefresh();
+      }
+    } catch {
+      toast.error("Failed to update notification state");
+    } finally {
+      onOpenChange(false);
+      const modalTarget = notification.task?.id
+        ? { type: "task" as const, id: notification.task.id }
+        : notification.project?.id
+          ? { type: "project" as const, id: notification.project.id }
+          : null;
+
+      if (modalTarget) {
+        queueDashboardModalTarget(modalTarget);
+        router.push(getRoleDashboardHref(user?.role, modalTarget.type));
+      } else {
+        router.push("/dashboard/notifications");
+      }
+    }
+  };
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-60 grid place-items-center overflow-y-auto px-4 py-6 sm:px-6">
+      <button
+        type="button"
+        aria-label="Close notification modal"
+        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      <div className={`relative z-61 w-full max-w-lg overflow-hidden border shadow-2xl transition-all ${isDark ? "border-zinc-800 bg-zinc-950/95 text-zinc-100" : "border-purple-200 bg-white/95 text-zinc-950"}`}>
+        <div className="relative p-6">
+          <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Bell size={18} className="text-purple-500" />
+              <h3 className="text-sm font-black uppercase tracking-widest">Notifications</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className={`inline-flex items-center gap-2 border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-colors ${isDark ? "border-purple-500/40 bg-purple-500/10 text-purple-300 hover:border-purple-400" : "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-300"}`}
+              >
+                <Bell size={12} /> Mark all read
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className={`inline-flex h-8 w-8 items-center justify-center border transition-colors ${isDark ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-purple-500" : "border-zinc-300 bg-white text-zinc-500 hover:border-purple-300"}`}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="py-12 text-center space-y-3">
+              <div className="mx-auto h-12 w-12 animate-pulse border border-dashed border-zinc-300 dark:border-zinc-700" />
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Loading notifications...</p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center border border-dashed border-zinc-300 dark:border-zinc-700 mx-auto text-zinc-400">
+                <Bell size={20} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Your inbox is clean</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">No new workspace alerts or task notifications.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="max-h-105 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
+              {notifications.map((notification) => {
+                return (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    onClick={() => handleOpenNotification(notification)}
+                    className={`w-full border p-4 text-left transition hover:border-purple-300 hover:bg-purple-50/40 dark:hover:border-purple-500/40 dark:hover:bg-purple-500/5 ${notification.isRead ? "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950" : "border-purple-200 bg-purple-50/30 dark:border-purple-500/30 dark:bg-purple-500/5"}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center border ${notification.isRead ? "border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300" : "border-purple-200 bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"}`}>
+                        <Bell size={16} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-zinc-950 dark:text-white">{notification.title}</p>
+                            <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-zinc-400 line-clamp-2">{notification.message}</p>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">
+                            {formatNotificationTime(notification.createdAt)}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider">
+                          <span className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">{notification.type}</span>
+                          {notification.project?.name ? <span className="border border-purple-200 bg-purple-50 px-2 py-1 text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300">{notification.project.name}</span> : null}
+                          {notification.task?.title ? <span className="border border-blue-200 bg-blue-50 px-2 py-1 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{notification.task.title}</span> : null}
+                          {notification.isRead ? null : <span className="border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">Unread</span>}
+                          <span className="border border-zinc-200 bg-white px-2 py-1 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">Open</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-zinc-200 pt-4 text-xs dark:border-zinc-800">
+            <p className="text-zinc-500 dark:text-zinc-400">Open the dashboard inbox for the full feed.</p>
+            <Link href="/dashboard/notifications" className="font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
+              View all notifications
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function Navbar({ user }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [passwordSheetOpen, setPasswordSheetOpen] = useState(false);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false); // 👈 Notification Modal State
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
   const { resolvedTheme } = useTheme();
   const pathname = usePathname();
+  const previousUnreadCountRef = useRef<number | null>(null);
+  const notificationsLoadedRef = useRef(false);
 
   const isDark = mounted && resolvedTheme === "dark";
   // Logout action state (hooks must be at top-level of component)
@@ -360,6 +551,76 @@ export default function Navbar({ user }: NavbarProps) {
   });
 
   const router = useRouter();
+
+  const loadNotifications = useCallback(async (options?: { notifyOnIncrease?: boolean }) => {
+    setNotificationsLoading(true);
+
+    try {
+      const [listResponse, unreadResponse] = await Promise.all([
+        fetch("/api/notifications?limit=10", { cache: "no-store" }),
+        fetch("/api/notifications?limit=1000&read=unread", { cache: "no-store" }),
+      ]);
+
+      const [listPayload, unreadPayload] = await Promise.all([
+        listResponse.json().catch(() => null) as Promise<{ success?: boolean; data?: NotificationRecord[] } | null>,
+        unreadResponse.json().catch(() => null) as Promise<{ success?: boolean; data?: NotificationRecord[] } | null>,
+      ]);
+
+      const nextNotifications = listResponse.ok && listPayload?.success && Array.isArray(listPayload.data) ? listPayload.data : [];
+      const nextUnreadCount = unreadResponse.ok && unreadPayload?.success && Array.isArray(unreadPayload.data) ? unreadPayload.data.length : 0;
+
+      if (notificationsLoadedRef.current && previousUnreadCountRef.current !== null && nextUnreadCount > previousUnreadCountRef.current && options?.notifyOnIncrease !== false) {
+        const delta = nextUnreadCount - previousUnreadCountRef.current;
+        toast.info(`${delta} new notification${delta === 1 ? "" : "s"}. You have ${nextUnreadCount} unread.`);
+      }
+
+      setNotifications(nextNotifications);
+      setUnreadCount(nextUnreadCount);
+      previousUnreadCountRef.current = nextUnreadCount;
+      notificationsLoadedRef.current = true;
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      const timer = window.setTimeout(() => {
+        void loadNotifications({ notifyOnIncrease: false });
+      }, 0);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    return undefined;
+  }, [mounted, loadNotifications]);
+
+  useEffect(() => {
+    if (notificationOpen) {
+      const timer = window.setTimeout(() => {
+        void loadNotifications({ notifyOnIncrease: false });
+      }, 0);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    return undefined;
+  }, [notificationOpen, loadNotifications]);
+
+  useEffect(() => {
+    if (!mounted || !user) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      void loadNotifications();
+    }, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [mounted, user, loadNotifications]);
 
   useEffect(() => {
     if (logoutState?.success) {
@@ -412,9 +673,9 @@ export default function Navbar({ user }: NavbarProps) {
             const baseClass = isDark ? "text-zinc-400 hover:text-purple-400" : "text-zinc-600 hover:text-purple-600";
             
             // 👈 Active Classes Applied Here
-            const activeClass = isDark 
-              ? "text-purple-400 font-bold bg-purple-500/10 px-3 py-1.5 rounded-md border border-purple-500/20" 
-              : "text-purple-700 font-bold bg-purple-50 px-3 py-1.5 rounded-md border border-purple-200";
+                const activeClass = isDark 
+              ? "text-purple-400 font-bold bg-purple-500/10 px-3 py-1.5 border border-purple-500/20" 
+              : "text-purple-700 font-bold bg-purple-50 px-3 py-1.5 border border-purple-200";
 
               return (
                 <Link
@@ -435,21 +696,39 @@ export default function Navbar({ user }: NavbarProps) {
         <div className="flex items-center gap-2.5 sm:gap-3">
           <ModeToggle />
 
+          {/* 👈 SHARP NOTIFICATION TRIGGER BUTTON */}
+          <button
+            type="button"
+            onClick={() => setNotificationOpen(true)}
+            className={`relative flex h-9 w-9 items-center justify-center border transition-colors ${
+              isDark 
+                ? "border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-purple-500 hover:text-purple-400" 
+                : "border-zinc-200 bg-white text-zinc-600 hover:border-purple-300 hover:text-purple-600"
+            }`}
+          >
+            <Bell size={16} />
+            {unreadCount > 0 ? (
+              <span className={`absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center border border-white px-1 text-[10px] font-black leading-none text-white ${isDark ? "bg-purple-500" : "bg-purple-600"}`}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            ) : null}
+          </button>
+
           {user ? (
             <div className="hidden items-center gap-3 sm:flex">
               <div className="group relative">
                 {/* Dropdown Trigger Button */}
                 <button
                   type="button"
-                  className={`flex max-w-44 items-center gap-2 rounded-full border px-3 py-1.5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${isDark
+                  className={`flex max-w-44 items-center gap-2 border px-3 py-1.5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${isDark
                     ? "border-zinc-800 bg-zinc-950 text-zinc-100 hover:border-purple-500/40 hover:bg-zinc-900"
                     : "border-zinc-200 bg-white text-zinc-900 hover:border-purple-200 hover:bg-purple-50/40"
                     }`}
                 >
                   {user?.image ? (
-                    <Image src={user.image} alt={user.name || "Avatar"} width={28} height={28} className="rounded-full object-cover shadow-sm" />
+                    <Image src={user.image} alt={user.name || "Avatar"} width={28} height={28} className="object-cover shadow-sm" />
                   ) : (
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isDark ? 'bg-zinc-700 text-white' : 'bg-zinc-200 text-zinc-900'} text-[9px] font-bold uppercase shadow-sm`}>
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center ${isDark ? 'bg-zinc-700 text-white' : 'bg-zinc-200 text-zinc-900'} text-[9px] font-bold uppercase shadow-sm`}>
                       {user?.name?.charAt(0) || "U"}
                     </span>
                   )}
@@ -466,14 +745,14 @@ export default function Navbar({ user }: NavbarProps) {
 
                 {/* Dropdown Menu */}
                 <div
-                  className={`invisible absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 translate-y-2 rounded-2xl border p-3 opacity-0 shadow-2xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${isDark
+                  className={`invisible absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 translate-y-2 border p-3 opacity-0 shadow-2xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${isDark
                     ? "border-zinc-800 bg-zinc-950 shadow-black/50"
                     : "border-zinc-200 bg-white shadow-gray-200/50"
                     }`}
                 >
                   {/* User Email Card */}
                   <div
-                    className={`rounded-xl border p-4 mb-3 ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50"
+                    className={`border p-4 mb-3 ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50"
                       }`}
                   >
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-2">
@@ -495,7 +774,7 @@ export default function Navbar({ user }: NavbarProps) {
                     <button
                       type="button"
                       onClick={() => setProfileSheetOpen(true)}
-                      className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
+                      className={`flex w-full items-center justify-start gap-3 border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
                         ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
                         : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
                         }`}
@@ -507,7 +786,7 @@ export default function Navbar({ user }: NavbarProps) {
                     <button
                       type="button"
                       onClick={() => setPasswordSheetOpen(true)}
-                      className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
+                      className={`flex w-full items-center justify-start gap-3 border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
                         ? "border-transparent bg-zinc-900 text-zinc-200 hover:border-purple-500/50 hover:text-purple-300 hover:bg-zinc-800"
                         : "border-transparent bg-zinc-50 text-zinc-700 hover:border-purple-200 hover:text-purple-600 hover:bg-purple-50"
                         }`}
@@ -521,7 +800,7 @@ export default function Navbar({ user }: NavbarProps) {
                       <button
                         type="submit"
                         disabled={logoutPending}
-                        className={`flex w-full items-center justify-start gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
+                        className={`flex w-full items-center justify-start gap-3 border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${isDark
                           ? "border-transparent bg-zinc-900 text-red-400 hover:border-red-500/50 hover:bg-red-950/30"
                           : "border-transparent bg-red-50 text-red-600 hover:border-red-200 hover:bg-red-100"
                           }`}
@@ -541,7 +820,7 @@ export default function Navbar({ user }: NavbarProps) {
             <>
               <Link
                 href="/login"
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${isDark
+                className={`inline-flex items-center gap-2 border px-4 py-2 text-sm font-semibold transition-all duration-200 ${isDark
                   ? "border-zinc-800 bg-black text-zinc-300 hover:border-purple-500/50 hover:text-purple-400"
                   : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"
                   }`}
@@ -551,7 +830,7 @@ export default function Navbar({ user }: NavbarProps) {
 
               <Link
                 href="/register"
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 ${isDark
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 ${isDark
                   ? "bg-purple-600 text-black shadow-purple-900/20 hover:bg-purple-500"
                   : "bg-purple-600 text-white shadow-purple-600/10 hover:bg-purple-700"
                   }`}
@@ -562,6 +841,9 @@ export default function Navbar({ user }: NavbarProps) {
           )}
         </div>
       </div>
+
+      {/* 👈 Notification Modal Linked to State inside JSX */}
+      <NotificationModal open={notificationOpen} onOpenChange={setNotificationOpen} isDark={isDark} user={user} notifications={notifications} loading={notificationsLoading} onRefresh={loadNotifications} />
     </header>
   );
 }

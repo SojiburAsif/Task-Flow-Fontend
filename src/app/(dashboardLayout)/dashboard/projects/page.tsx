@@ -1,37 +1,37 @@
 import React from "react";
 
 import { getCurrentUser } from "@/lib/currentUser";
-import { getProjectById, getProjects } from "@/services/project.service";
+import { getProjects } from "@/services/project.service";
+import { getTasks } from "@/services/task.service";
+import { getUsers } from "@/services/user.service";
 import { TeamBoard } from "@/components/Dashboard/TeamBoard";
 
 type ProjectsPageProps = {
 	searchParams?: Promise<{
-		view?: string;
+		returnTo?: string;
 	}>;
 };
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
-	const resolvedSearchParams = searchParams ? await searchParams : undefined;
-	const initialProjectId = typeof resolvedSearchParams?.view === "string" && resolvedSearchParams.view.trim() ? resolvedSearchParams.view.trim() : null;
-	const [projects, user, selectedProject] = await Promise.all([
+	void searchParams;
+	const [projects, user, users] = await Promise.all([
 		getProjects({ page: 1, limit: 100 }),
 		getCurrentUser(),
-		initialProjectId ? getProjectById(initialProjectId) : Promise.resolve(null),
+		getUsers(),
 	]);
-	const mergedProjects = selectedProject
-		? [selectedProject, ...(projects ?? []).filter(project => project.id !== selectedProject.id)]
-		: projects ?? [];
+	const tasks = await getTasks({ page: 1, limit: 100 });
 	const canEdit = user?.role === "Admin" || user?.role === "ProjectManager";
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
 			<TeamBoard
-				projects={mergedProjects}
+				projects={projects ?? []}
+				tasks={tasks ?? []}
+				users={users ?? []}
 				title="Projects"
 				description="Open a project to review its members, deadline, and status. This page now reads from the dedicated project API helpers."
 				roleLabel={user?.role ? `${user.role} workspace` : "Projects workspace"}
 				canEdit={canEdit}
-				initialProjectId={initialProjectId}
 			/>
 		</div>
 	);

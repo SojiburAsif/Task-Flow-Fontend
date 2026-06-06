@@ -25,7 +25,7 @@ export function ModeToggle() {
         type="button"
         variant="outline"
         size="icon"
-        className="h-9 w-16 rounded-full border border-zinc-200 bg-zinc-100 opacity-50 cursor-not-allowed"
+        className="h-9 w-16 rounded-none border border-zinc-200 bg-zinc-100 opacity-50 cursor-not-allowed"
         disabled
       />
     )
@@ -37,7 +37,7 @@ export function ModeToggle() {
       variant="outline"
       size="icon"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={`relative h-9 w-16 overflow-hidden rounded-full border p-0.5 shadow-inner transition-all duration-300 select-none
+      className={`relative h-9 w-16 overflow-hidden rounded-none border p-0.5 shadow-inner transition-all duration-300 select-none
         ${isDark 
           ? "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-purple-500/50" 
           : "border-zinc-200 bg-zinc-100 text-zinc-500 hover:border-purple-300"
@@ -46,7 +46,7 @@ export function ModeToggle() {
     >
   
       <span
-        className={`absolute top-0.5 bottom-0.5 left-0.5 w-7 rounded-full shadow-md transition-transform duration-300 ease-in-out
+        className={`absolute top-0.5 bottom-0.5 left-0.5 w-7 rounded-none shadow-md transition-transform duration-300 ease-in-out
           ${isDark ? "translate-x-7 bg-zinc-900 border border-zinc-800" : "translate-x-0 bg-white"}`}
       />
 

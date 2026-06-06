@@ -57,11 +57,7 @@ export default function ProjectEditForm({ project, teamMembers, returnTo = "/das
 		if (deleteState.success) {
 			toast.success(deleteState.message || "Project deleted successfully.");
 			window.setTimeout(() => {
-				if (onClose) {
-					onClose();
-				} else {
-					window.location.assign(returnTo);
-				}
+				window.location.assign(returnTo);
 			}, 500);
 		} else if (deleteState.message) {
 			toast.error(deleteState.message);
@@ -118,7 +114,6 @@ export default function ProjectEditForm({ project, teamMembers, returnTo = "/das
 					</div>
 				</CardContent>
 				</Card>
-			</form>
 
 			<Card className="border-zinc-200/70 shadow-sm dark:border-zinc-800">
 				<CardHeader>
@@ -161,6 +156,7 @@ export default function ProjectEditForm({ project, teamMembers, returnTo = "/das
 					</div>
 				</CardContent>
 			</Card>
+			</form>
 
 			<Card className="border-zinc-200/70 shadow-sm dark:border-zinc-800">
 				<CardHeader>

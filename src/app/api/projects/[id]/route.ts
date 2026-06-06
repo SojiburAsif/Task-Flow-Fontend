@@ -3,7 +3,8 @@ import { updateProject } from "@/services/project.service";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return NextResponse.redirect(new URL(`/dashboard/projects?view=${id}`, _req.url));
+  void id;
+  return NextResponse.redirect(new URL(`/dashboard/projects`, _req.url));
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -29,6 +29,7 @@ const revalidateTaskViews = (taskId: string, returnTo?: string | null) => {
 	revalidatePath("/dashboard/tasks");
 	revalidatePath("/dashboard/AdminTasks");
 	revalidatePath(`/dashboard/tasks/${taskId}`);
+	revalidatePath("/dashboard/projects");
 	revalidatePath(`/dashboard/tasks/${taskId}/edit`);
 
 	if (returnTo?.startsWith("/dashboard")) {

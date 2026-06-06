@@ -4,18 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Search, TrendingUp, Zap, FileText, ShoppingBag, Users, DollarSign, Package, FolderGit2, CheckSquare, X, LucideIcon } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/provider/theme-provider';
-import Link from 'next/link';
-
-// ==========================================
-// DUMMY SEARCH DATA (Replace with API later)
-// ==========================================
-const mockSearchData = [
-  { id: "1", type: "Project", title: "Website Redesign 2026", status: "Active", link: "/dashboard/projects" },
-  { id: "2", type: "Project", title: "Cloud Migration", status: "On Hold", link: "/dashboard/projects" },
-  { id: "3", type: "Task", title: "Fix Navigation Bug", status: "High Priority", link: "/dashboard/tasks/my" },
-  { id: "4", type: "Project", title: "Billing System Integration", status: "Completed", link: "/dashboard/projects" },
-  { id: "5", type: "Task", title: "Update Staff Reports", status: "Medium Priority", link: "/dashboard/tasks/my" },
-];
+import type { SearchResultItem } from '@/types/search';
+import DashboardModalLink from '@/components/shared/DashboardModalLink';
 
 interface FloatingIconProps {
   icon: LucideIcon;
@@ -85,7 +75,8 @@ export default function HeroSection() {
   // Search States
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<typeof mockSearchData>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const isDark = mounted && resolvedTheme === "dark";
@@ -106,22 +97,53 @@ export default function HeroSection() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle Search Logic
+  useEffect(() => {
+    const query = searchQuery.trim();
+
+    if (query.length < 2) {
+      const frame = window.requestAnimationFrame(() => {
+        setIsLoading(false);
+        setSearchResults([]);
+        setIsSearching(false);
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=6`, { signal: controller.signal });
+        if (!response.ok) {
+          throw new Error("Search failed");
+        }
+
+        const payload = await response.json() as { success?: boolean; data?: SearchResultItem[] };
+        setSearchResults(payload.success && Array.isArray(payload.data) ? payload.data : []);
+      } catch {
+        if (!controller.signal.aborted) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [searchQuery]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
 
-    if (query.trim().length > 0) {
+    if (query.trim().length >= 2) {
       setIsSearching(true);
-      // Filter mock data (Replace with API call)
-      const filtered = mockSearchData.filter(item => 
-        item.title.toLowerCase().includes(query.toLowerCase()) || 
-        item.type.toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filtered);
     } else {
       setIsSearching(false);
-      setSearchResults([]);
     }
   };
 
@@ -194,11 +216,12 @@ export default function HeroSection() {
               className={`w-full bg-transparent px-4 py-3.5 text-sm font-bold outline-none placeholder:text-zinc-400 placeholder:font-medium ${isDark ? "text-white" : "text-zinc-900"}`}
             />
             {searchQuery && (
-              <button onClick={clearSearch} className="mr-2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+              <button type="button" onClick={clearSearch} className="mr-2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                 <X size={16} />
               </button>
             )}
             <motion.button
+              type="button"
               className="bg-purple-600 px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-purple-700 rounded-none border border-purple-700 shrink-0 hidden sm:flex items-center gap-2"
               whileTap={{ scale: 0.98 }}
             >
@@ -219,33 +242,36 @@ export default function HeroSection() {
                   Search Results
                 </div>
                 
-                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div className="max-h-75 overflow-y-auto custom-scrollbar">
                   {searchResults.length > 0 ? (
                     searchResults.map((item) => (
-                      <Link 
+                      <DashboardModalLink 
                         key={item.id} 
                         href={item.link}
-                        onClick={clearSearch}
+                          target={item.target ?? "_self"}
+                          rel={item.target === "_blank" ? "noreferrer noopener" : undefined}
+                          modalTarget={item.type === "project" || item.type === "task" ? { type: item.type, id: item.id } : null}
+                          onClick={clearSearch}
                         className={`flex items-center justify-between border-b last:border-b-0 p-4 transition-colors ${isDark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-100 hover:bg-zinc-50"}`}
-                      >
+                        >
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center border rounded-none ${item.type === "Project" ? "border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-400" : "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400"}`}>
-                            {item.type === "Project" ? <FolderGit2 size={16} /> : <CheckSquare size={16} />}
+                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center border rounded-none ${item.type === "project" ? "border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-400" : item.type === "task" ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400" : "border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"}`}>
+                              {item.type === "project" ? <FolderGit2 size={16} /> : item.type === "task" ? <CheckSquare size={16} /> : <Search size={16} />}
                           </div>
                           <div>
                             <p className={`text-sm font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{item.title}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-0.5">{item.type}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-0.5">{item.subtitle || item.type}</p>
                           </div>
                         </div>
-                        <span className={`border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${item.status === "Active" || item.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400" : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400"}`}>
-                          {item.status}
+                          <span className={`border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${item.type === "site" ? "bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800" : item.status === "Active" || item.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400" : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400"}`}>
+                            {item.status || item.type}
                         </span>
-                      </Link>
+                      </DashboardModalLink>
                     ))
                   ) : (
                     <div className="p-8 text-center">
-                      <p className={`text-sm font-bold ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>No results found for &rdquo;{searchQuery}&#34;</p>
-                      <p className="text-xs text-zinc-500 mt-1">Try searching for &#34;Project&rdquo; or &#34;Task&rdquo;</p>
+                        <p className={`text-sm font-bold ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{isLoading ? "Searching..." : `No results found for "${searchQuery}"`}</p>
+                        <p className="text-xs text-zinc-500 mt-1">Try searching for &quot;Project&quot;, &quot;Task&quot;, or &quot;Dashboard&quot;</p>
                     </div>
                   )}
                 </div>

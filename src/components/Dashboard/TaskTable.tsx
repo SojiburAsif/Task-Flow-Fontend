@@ -6,12 +6,14 @@ import { ArrowUpRight, CalendarDays, CircleDashed, Paperclip, Users2, X } from "
 import { motion, AnimatePresence } from "framer-motion";
 import Portal from "@/components/ui/portal";
 import { toast } from "sonner";
+import DashboardModalLink from "@/components/shared/DashboardModalLink";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { updateTaskStatusAction } from "@/services/task.actions";
 import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 import { TaskEditForm } from "@/components/Dashboard/TaskEditForm";
+import { getProjectDetailsHref } from "@/lib/dashboard-links";
 
 const statusLabel: Record<TaskStatusValue, string> = {
 	Todo: "To Do",
@@ -121,6 +123,7 @@ const getPriorityRank = (priority?: string | null) => {
 export type TaskTableProps = {
 	tasks: TaskRecord[];
 	returnTo: string;
+	initialTaskId?: string | null;
 	statusEditable?: boolean;
 	allowAssignmentEdit?: boolean;
 	allowTaskEdit?: boolean;
@@ -196,9 +199,9 @@ function TaskRow({
 				</td>
 				<td className="px-4 py-4 align-top">
 					<div className="space-y-1">
-						<Link href={`/dashboard/projects?view=${task.project.id}`} className="font-semibold text-purple-600 transition hover:text-purple-500 dark:text-purple-300">
+						   <DashboardModalLink href={getProjectDetailsHref(task.project.id)} modalTarget={{ type: "project", id: task.project.id }} className="font-semibold text-purple-600 transition hover:text-purple-500 dark:text-purple-300">
 							{task.project.name}
-						</Link>
+						   </DashboardModalLink>
 					</div>
 				</td>
 				<td className="px-4 py-4 align-top text-sm text-zinc-600 dark:text-zinc-400">
@@ -331,7 +334,7 @@ function TaskRow({
 	);
 }
 
-export function TaskTable({ tasks, returnTo, statusEditable = false, allowAssignmentEdit = false, allowTaskEdit = false }: TaskTableProps) {
+export function TaskTable({ tasks, returnTo, initialTaskId = null, statusEditable = false, allowAssignmentEdit = false, allowTaskEdit = false }: TaskTableProps) {
  	const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 	const [openProjectModal, setOpenProjectModal] = useState<TaskRecord["project"] | null>(null);
 	// search and status filter removed — keep table client-side simple for now
@@ -353,6 +356,15 @@ export function TaskTable({ tasks, returnTo, statusEditable = false, allowAssign
 	}, [tasks]);
 
 	const filteredTasks = useMemo(() => sortedTasks, [sortedTasks]);
+
+	useEffect(() => {
+		if (!initialTaskId) return;
+		const found = sortedTasks.find((task) => task.id === initialTaskId);
+		if (!found) return;
+
+		const rafId = window.requestAnimationFrame(() => setExpandedTaskId(found.id));
+		return () => window.cancelAnimationFrame(rafId);
+	}, [initialTaskId, sortedTasks]);
 
 	const toggleDetails = (taskId: string) => {
 		setExpandedTaskId(current => (current === taskId ? null : taskId));

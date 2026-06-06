@@ -20,7 +20,7 @@ export default async function EditTaskPage({ params, searchParams }: Props) {
 
 	const returnTo = typeof resolvedSearchParams?.returnTo === "string" && resolvedSearchParams.returnTo.startsWith("/dashboard")
 		? resolvedSearchParams.returnTo
-		: `/dashboard/tasks/${task.id}`;
+		: `/dashboard/projects?task=${task.id}`;
 	const mode = user?.role === "Admin" || user?.role === "ProjectManager" ? "full" : "status";
 
 	return (

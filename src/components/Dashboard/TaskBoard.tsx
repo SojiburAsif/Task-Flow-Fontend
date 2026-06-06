@@ -9,6 +9,7 @@ import { TaskTable } from "./TaskTable";
 import { createTaskAction } from "../../services/task.actions";
 import type { ProjectRecord } from "../../services/project.service";
 import type { TaskRecord, TaskStatusValue } from "../../services/task.service";
+import { clearDashboardModalTarget, readDashboardModalTarget } from "@/components/shared/DashboardModalLink";
 
 type TaskBoardProps = {
 	tasks: TaskRecord[];
@@ -18,6 +19,7 @@ type TaskBoardProps = {
 	returnTo: string;
 	statusEditable?: boolean;
 	canCreateTask?: boolean;
+	hideTaskSection?: boolean;
 	projects?: ProjectRecord[];
 	allowAssignmentEdit?: boolean;
 	allowTaskEdit?: boolean;
@@ -41,6 +43,7 @@ export function TaskBoard({
 	returnTo,
 	statusEditable = false,
 	canCreateTask = false,
+	hideTaskSection = false,
 	projects,
 	allowAssignmentEdit = false,
 	allowTaskEdit = false,
@@ -48,6 +51,7 @@ export function TaskBoard({
 	const [openProjectModal, setOpenProjectModal] = useState<ProjectRecord | null>(null);
 	const [createTaskOpen, setCreateTaskOpen] = useState(false);
 	const [createTaskProjectId, setCreateTaskProjectId] = useState<string | null>(null);
+	const [initialTaskId, setInitialTaskId] = useState<string | null>(null);
 	const [now, setNow] = useState(() => Date.now());
 
 	useEffect(() => {
@@ -78,6 +82,23 @@ export function TaskBoard({
 		setCreateTaskProjectId(projectId ?? null);
 		setCreateTaskOpen(true);
 	};
+
+	useEffect(() => {
+		const queuedTarget = readDashboardModalTarget();
+		if (!queuedTarget || queuedTarget.type !== "task") return;
+
+		const found = tasks.find((task) => task.id === queuedTarget.id);
+		if (!found) return;
+
+		clearDashboardModalTarget();
+		const rafId = window.requestAnimationFrame(() => {
+			setCreateTaskOpen(false);
+			setCreateTaskProjectId(null);
+			setInitialTaskId(found.id);
+		});
+
+		return () => window.cancelAnimationFrame(rafId);
+	}, [tasks]);
 
 	return (
 		<>
@@ -196,6 +217,7 @@ export function TaskBoard({
 					))}
 				</div>
 
+				{!hideTaskSection ? (
 				<div className="border border-zinc-200/80 bg-white p-6 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.35)] dark:border-zinc-800/80 dark:bg-zinc-950 sm:p-8">
 					<div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 						<div className="flex items-center gap-3">
@@ -212,11 +234,13 @@ export function TaskBoard({
 					<TaskTable
 						tasks={tasks}
 						returnTo={returnTo}
+						initialTaskId={initialTaskId}
 						statusEditable={statusEditable}
 						allowAssignmentEdit={allowAssignmentEdit}
 						allowTaskEdit={allowTaskEdit}
 					/>
-				</div>
+					</div>
+				) : null}
 			</section>
 
 			<AnimatePresence>

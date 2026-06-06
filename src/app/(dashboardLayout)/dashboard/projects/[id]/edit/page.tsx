@@ -25,7 +25,7 @@ export default async function ProjectEditPage({ params, searchParams }: Props) {
 	const allowedRole = currentUser.role === Role.ADMIN || currentUser.role === Role.ProjectManager;
 
 	if (!allowedRole) {
-		redirect(`/dashboard/projects?view=${id}`);
+		redirect(`/dashboard/projects/${id}`);
 	}
 
 	const [project, users] = await Promise.all([getProjectById(id), getUsers()]);
@@ -40,12 +40,12 @@ export default async function ProjectEditPage({ params, searchParams }: Props) {
 	});
 	const returnTo = typeof resolvedSearchParams?.returnTo === "string" && resolvedSearchParams.returnTo.startsWith("/dashboard")
 		? resolvedSearchParams.returnTo
-		: `/dashboard/projects?view=${project.id}`;
+		: `/dashboard/projects/${project.id}`;
 
 	return (
 		<div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 			<div className="mb-6 flex items-center justify-between gap-4">
-				<Link href={`/dashboard/projects?view=${project.id}`} className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-purple-600">
+				<Link href={returnTo} className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-purple-600">
 					Back to project
 				</Link>
 				<p className="text-sm text-zinc-500">{currentUser?.role ? `${currentUser.role} editing mode` : "Editing mode"}</p>

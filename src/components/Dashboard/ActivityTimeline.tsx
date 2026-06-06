@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
 import type { ActivityRecord } from "@/services/activity.service";
+import { getProjectDetailsHref } from "@/lib/dashboard-links";
 
 type ActivityTimelineProps = {
   activities: ActivityRecord[];
@@ -60,7 +61,7 @@ export function ActivityTimeline({ activities, title, description, roleLabel }: 
   return (
     <section className="relative w-full">
       <div className="relative overflow-hidden border border-zinc-200 bg-white/90 p-6 shadow-none backdrop-blur rounded-none dark:border-zinc-800 dark:bg-zinc-950/90 sm:p-8 mb-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-zinc-500/5 dark:from-purple-500/10 dark:to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-purple-500/5 via-transparent to-zinc-500/5 dark:from-purple-500/10 dark:to-transparent" />
 
         <div className="relative mb-4 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
@@ -232,7 +233,7 @@ export function ActivityTimeline({ activities, title, description, roleLabel }: 
                 </div>
 
                 <div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50/60 px-0 pt-4 dark:border-zinc-900 dark:bg-zinc-900/10">
-                  <Link href={`/dashboard/projects?view=${openProject.id}`} className="inline-flex items-center gap-2 bg-purple-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-purple-700">
+                  <Link href={getProjectDetailsHref(openProject.id)} className="inline-flex items-center gap-2 bg-purple-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-purple-700">
                     Open Project Page
                     <ArrowUpRight size={16} />
                   </Link>
