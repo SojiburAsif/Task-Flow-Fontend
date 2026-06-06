@@ -7,6 +7,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { DashboardStats } from "@/services/dashboard.service";
 
 export const description = "Dashboard overview with area chart and linked summary cards";
@@ -50,6 +51,7 @@ const buildChartData = (stats: DashboardStats | null) => {
 };
 
 export function DashboardOverview({ title, description, roleLabel, stats, links }: DashboardOverviewProps) {
+  const isMobile = useIsMobile();
   const chartData = buildChartData(stats);
   const counts = stats?.counts ?? {
     totalProjects: 0,
@@ -106,11 +108,11 @@ export function DashboardOverview({ title, description, roleLabel, stats, links 
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 pb-0 pt-6 sm:px-6">
-            <ChartContainer config={chartConfig} className="min-h-80 w-full">
-              <AreaChart data={chartData} margin={{ left: -12, right: 12, top: 8, bottom: 0 }}>
+            <ChartContainer config={chartConfig} className="min-h-64 w-full sm:min-h-80">
+              <AreaChart data={chartData} margin={{ left: isMobile ? -4 : -12, right: isMobile ? 4 : 12, top: 8, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeOpacity={0.2} strokeDasharray="3 3" />
-                <XAxis dataKey="project" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} fill="var(--color-foreground)" />
-                <YAxis tickLine={false} axisLine={false} tickMargin={10} domain={[0, 100]} tickCount={6} fontSize={12} fill="var(--color-foreground)" />
+                <XAxis dataKey="project" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} fill="var(--color-foreground)" />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} domain={[0, 100]} tickCount={6} fontSize={12} fill="var(--color-foreground)" />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
                 <Area dataKey="progress" type="step" fill="var(--color-progress)" fillOpacity={0.25} stroke="var(--color-progress)" strokeWidth={2.2} />
                 <Area dataKey="completed" type="step" fill="var(--color-completed)" fillOpacity={0.16} stroke="var(--color-completed)" strokeWidth={1.6} />
@@ -132,21 +134,21 @@ export function DashboardOverview({ title, description, roleLabel, stats, links 
             RIGHT COLUMN: KPI STATS & PRIORITY
         ============================================= */}
         <div className="grid gap-6">
-          <div id="summary" className="grid grid-cols-2 gap-4">
+          <div id="summary" className="grid grid-cols-2 gap-3 sm:gap-4">
             {[
               { label: "Projects", value: counts.totalProjects, icon: LayoutGrid, tone: "text-purple-600 bg-purple-50 dark:bg-purple-900/20" },
               { label: "Tasks", value: counts.totalTasks, icon: ListTodo, tone: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" },
               { label: "Completed", value: counts.completedTasks, icon: CheckCircle2, tone: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" },
               { label: "Overdue", value: counts.overdueTasks, icon: CalendarDays, tone: "text-rose-600 bg-rose-50 dark:bg-rose-900/20" },
             ].map((item) => (
-              <Card key={item.label} className="border border-zinc-200 bg-white shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 transition-all hover:border-purple-300 dark:hover:border-purple-900/50">
-                <CardContent className="p-5">
-                  <div className={`mb-4 flex h-12 w-12 items-center justify-center border border-zinc-100 rounded-none dark:border-zinc-800 ${item.tone}`}>
+                <Card key={item.label} className="border border-zinc-200 bg-white shadow-none rounded-none dark:border-zinc-800 dark:bg-zinc-950 transition-all hover:border-purple-300 dark:hover:border-purple-900/50">
+                <CardContent className="p-4 sm:p-5">
+                  <div className={`mb-4 flex h-11 w-11 items-center justify-center border border-zinc-100 rounded-none dark:border-zinc-800 ${item.tone}`}>
                     <item.icon className="h-5 w-5" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{item.label}</p>
-                    <p className="mt-1 text-3xl font-black text-zinc-950 dark:text-white">{item.value}</p>
+                    <p className="mt-1 text-2xl font-black text-zinc-950 sm:text-3xl dark:text-white">{item.value}</p>
                   </div>
                 </CardContent>
               </Card>

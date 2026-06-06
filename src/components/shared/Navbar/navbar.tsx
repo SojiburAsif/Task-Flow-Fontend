@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock, LineChart, Star, Activity, Info, HomeIcon, Bell } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserPlus, X, Key, Mail, Lock, LineChart, Star, Activity, Info, HomeIcon, Bell, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -532,6 +532,7 @@ function NotificationModal({ open, onOpenChange, isDark, user, notifications, lo
 export default function Navbar({ user }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [passwordSheetOpen, setPasswordSheetOpen] = useState(false);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false); // 👈 Notification Modal State
@@ -551,6 +552,9 @@ export default function Navbar({ user }: NavbarProps) {
   });
 
   const router = useRouter();
+  const visibleNavItems = user
+    ? navItems
+    : navItems.filter((item) => ["Home", "Features", "About"].includes(item.label));
 
   const loadNotifications = useCallback(async (options?: { notifyOnIncrease?: boolean }) => {
     setNotificationsLoading(true);
@@ -646,6 +650,14 @@ export default function Navbar({ user }: NavbarProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setMobileMenuOpen(false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 border-b backdrop-blur-xl transition-all duration-300 ${isScrolled
@@ -657,18 +669,15 @@ export default function Navbar({ user }: NavbarProps) {
           : "border-transparent bg-transparent py-5"
         }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
-        <Logo />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Brand Logo */}
+          <Logo />
+        </div>
 
         {/* Navigation Items */}
         <nav className="hidden items-center gap-8 lg:flex">
-          {(() => {
-            const itemsToShow = user
-              ? navItems
-              : navItems.filter(i => ['Home', 'Features', 'About'].includes(i.label));
-
-            return itemsToShow.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname && (pathname === item.href || pathname.startsWith(item.href + "/") || (item.href !== "/" && pathname.startsWith(item.href)));
             const baseClass = isDark ? "text-zinc-400 hover:text-purple-400" : "text-zinc-600 hover:text-purple-600";
             
@@ -688,13 +697,14 @@ export default function Navbar({ user }: NavbarProps) {
                   {item.label}
                 </Link>
               );
-            });
-          })()}
+          })}
         </nav>
 
         {/* Dynamic Action Buttons */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <ModeToggle />
+          <div className="hidden sm:block">
+            <ModeToggle />
+          </div>
 
           {/* 👈 SHARP NOTIFICATION TRIGGER BUTTON */}
           <button
@@ -712,6 +722,15 @@ export default function Navbar({ user }: NavbarProps) {
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             ) : null}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className={`inline-flex h-9 w-9 items-center justify-center border transition-colors lg:hidden ${isDark ? "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-purple-500 hover:text-purple-400" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"}`}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={16} />
           </button>
 
           {user ? (
@@ -818,6 +837,7 @@ export default function Navbar({ user }: NavbarProps) {
             </div>
           ) : (
             <>
+              <div className="hidden sm:block">
               <Link
                 href="/login"
                 className={`inline-flex items-center gap-2 border px-4 py-2 text-sm font-semibold transition-all duration-200 ${isDark
@@ -827,7 +847,9 @@ export default function Navbar({ user }: NavbarProps) {
               >
                 <LogIn size={15} /> Login
               </Link>
+              </div>
 
+              <div className="hidden sm:block">
               <Link
                 href="/register"
                 className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 ${isDark
@@ -837,10 +859,152 @@ export default function Navbar({ user }: NavbarProps) {
               >
                 <UserPlus size={15} /> Get Started
               </Link>
+              </div>
             </>
           )}
         </div>
       </div>
+
+      {mobileMenuOpen ? (
+        createPortal(
+          <div className="fixed inset-0 z-60 lg:hidden">
+            <button
+              type="button"
+              aria-label="Close navigation menu"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+
+            <div className={`absolute right-0 top-0 flex h-full w-full max-w-sm flex-col border-l shadow-2xl ${isDark ? "border-zinc-800 bg-zinc-950 text-zinc-50" : "border-zinc-200 bg-white text-zinc-950"}`}>
+              <div className={`flex items-center justify-between border-b px-4 py-4 ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-600 dark:text-purple-400">Navigation</p>
+                  <p className="text-sm font-semibold">Quick access</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`inline-flex h-9 w-9 items-center justify-center border transition-colors ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-purple-500" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300"}`}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                <div className="space-y-2">
+                  {visibleNavItems.map((item) => {
+                    const isActive = pathname && (pathname === item.href || pathname.startsWith(item.href + "/") || (item.href !== "/" && pathname.startsWith(item.href)));
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 border px-4 py-3 text-sm font-semibold transition-colors ${isActive
+                          ? isDark
+                            ? "border-purple-500/40 bg-purple-500/10 text-purple-300"
+                            : "border-purple-200 bg-purple-50 text-purple-700"
+                          : isDark
+                            ? "border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-purple-500/40 hover:text-purple-300"
+                            : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"
+                        }`}
+                      >
+                        <item.icon size={16} className={isActive ? "text-current" : "opacity-70"} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 border-t pt-4 dark:border-zinc-800">
+                  <div className="grid gap-3">
+                    <div className="flex items-center gap-3 border px-4 py-3 dark:border-zinc-800">
+                      <Bell size={16} className="text-purple-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">Unread</p>
+                        <p className="text-sm font-semibold">{unreadCount} notification{unreadCount === 1 ? "" : "s"}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setNotificationOpen(true);
+                      }}
+                      className={`flex items-center gap-3 border px-4 py-3 text-left text-sm font-semibold transition-colors ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-purple-500/40" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300"}`}
+                    >
+                      <Bell size={16} className="text-purple-500" />
+                      Open notifications
+                    </button>
+
+                    <div className="sm:hidden">
+                      <ModeToggle />
+                    </div>
+
+                    {user ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setProfileSheetOpen(true);
+                          }}
+                          className={`flex items-center gap-3 border px-4 py-3 text-left text-sm font-semibold transition-colors ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-purple-500/40" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300"}`}
+                        >
+                          <UserPlus size={16} />
+                          Update profile
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setPasswordSheetOpen(true);
+                          }}
+                          className={`flex items-center gap-3 border px-4 py-3 text-left text-sm font-semibold transition-colors ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-purple-500/40" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300"}`}
+                        >
+                          <Key size={16} />
+                          Change password
+                        </button>
+
+                        <form action={logoutFormAction}>
+                          <button
+                            type="submit"
+                            disabled={logoutPending}
+                            className={`flex w-full items-center gap-3 border px-4 py-3 text-left text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${isDark ? "border-zinc-800 bg-zinc-900 text-red-400 hover:border-red-500/50" : "border-zinc-200 bg-white text-red-600 hover:border-red-200"}`}
+                          >
+                            <LogOut size={16} />
+                            {logoutPending ? "Logging out..." : "Logout"}
+                          </button>
+                        </form>
+                      </>
+                    ) : (
+                      <div className="grid gap-3 sm:hidden">
+                        <Link
+                          href="/login"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`inline-flex items-center justify-center gap-2 border px-4 py-3 text-sm font-semibold transition-colors ${isDark ? "border-zinc-800 bg-black text-zinc-300 hover:border-purple-500/50 hover:text-purple-400" : "border-zinc-200 bg-white text-zinc-700 hover:border-purple-300 hover:text-purple-600"}`}
+                        >
+                          <LogIn size={15} /> Login
+                        </Link>
+
+                        <Link
+                          href="/register"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 ${isDark ? "bg-purple-600 text-black shadow-purple-900/20 hover:bg-purple-500" : "bg-purple-600 text-white shadow-purple-600/10 hover:bg-purple-700"}`}
+                        >
+                          <UserPlus size={15} /> Get Started
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      ) : null}
 
       {/* 👈 Notification Modal Linked to State inside JSX */}
       <NotificationModal open={notificationOpen} onOpenChange={setNotificationOpen} isDark={isDark} user={user} notifications={notifications} loading={notificationsLoading} onRefresh={loadNotifications} />

@@ -1,9 +1,11 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import type { DashboardStats } from "@/services/dashboard.service";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TeamMemberDashboardChartsProps = {
 	stats: DashboardStats | null;
@@ -78,6 +80,7 @@ const buildProjectChartData = (stats: DashboardStats | null) =>
 	}));
 
 export function TeamMemberDashboardCharts({ stats }: TeamMemberDashboardChartsProps) {
+	const isMobile = useIsMobile();
 	const priorityData = buildPriorityData(stats);
 	const statusData = buildStatusData(stats);
 	const projectData = buildProjectChartData(stats);
@@ -88,7 +91,7 @@ export function TeamMemberDashboardCharts({ stats }: TeamMemberDashboardChartsPr
 
 	return (
 		<>
-			<div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+			<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-[1.08fr_0.92fr]">
 				<Card
 					id="priority-overview"
 					className="overflow-hidden border border-zinc-200/80 bg-white/85 shadow-[0_24px_80px_rgba(91,33,182,0.10)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30"
@@ -100,15 +103,15 @@ export function TeamMemberDashboardCharts({ stats }: TeamMemberDashboardChartsPr
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="px-4 pb-5 pt-4 sm:px-6">
-						<ChartContainer config={priorityChartConfig} className="min-h-80 w-full">
+						<ChartContainer config={priorityChartConfig} className="min-h-64 w-full sm:min-h-80">
 							<PieChart>
 								<ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
 								<Pie
 									data={priorityData}
 									dataKey="value"
 									nameKey="label"
-									innerRadius={72}
-									outerRadius={118}
+									innerRadius={isMobile ? 52 : 72}
+									outerRadius={isMobile ? 92 : 118}
 									paddingAngle={4}
 									strokeWidth={2}
 								>
@@ -132,11 +135,11 @@ export function TeamMemberDashboardCharts({ stats }: TeamMemberDashboardChartsPr
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="px-4 pb-5 pt-4 sm:px-6">
-						<ChartContainer config={statusChartConfig} className="min-h-80 w-full">
-							<BarChart data={statusData} layout="vertical" margin={{ left: 12, right: 18, top: 8, bottom: 8 }} barSize={22}>
+						<ChartContainer config={statusChartConfig} className="min-h-64 w-full sm:min-h-80">
+							<BarChart data={statusData} layout="vertical" margin={{ left: isMobile ? 4 : 12, right: isMobile ? 12 : 18, top: 8, bottom: 8 }} barSize={isMobile ? 16 : 22}>
 								<CartesianGrid horizontal={false} strokeOpacity={0.18} />
 								<XAxis type="number" hide />
-								<YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={92} />
+								<YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={isMobile ? 78 : 92} />
 								<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
 								<Bar dataKey="value" radius={[0, 14, 14, 0]}>
 									{statusData.map((entry) => (
@@ -161,9 +164,9 @@ export function TeamMemberDashboardCharts({ stats }: TeamMemberDashboardChartsPr
 						config={{
 							progress: { label: "Progress", color: "hsl(var(--chart-1))" },
 						}}
-						className="min-h-80 w-full"
+						className="min-h-64 w-full sm:min-h-80"
 					>
-						<BarChart data={projectData.length > 0 ? projectData : chartFallback} margin={{ left: -8, right: 10, top: 8, bottom: 0 }}>
+						<BarChart data={projectData.length > 0 ? projectData : chartFallback} margin={{ left: isMobile ? 0 : -8, right: isMobile ? 6 : 10, top: 8, bottom: 0 }}>
 							<CartesianGrid vertical={false} strokeOpacity={0.18} />
 							<XAxis dataKey="project" tickLine={false} axisLine={false} tickMargin={10} />
 							<YAxis tickLine={false} axisLine={false} tickMargin={10} domain={[0, 100]} tickCount={6} />
