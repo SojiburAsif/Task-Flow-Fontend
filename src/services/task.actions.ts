@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 
 import { authCookieNames } from "@/lib/authUtils";
 import { getProxyEnv } from "@/lib/env";
-import { updateTask } from "@/services/task.service";
+import { deleteTask, updateTask } from "@/services/task.service";
+
+type ActionState = {
+	success: boolean;
+	message: string;
+};
 
 const buildCookieHeader = (accessToken?: string, refreshToken?: string, sessionToken?: string) => {
 	const parts = [
@@ -32,7 +37,7 @@ const revalidateTaskViews = (taskId: string, returnTo?: string | null) => {
 };
 
 export const updateTaskStatusAction = async (
-	prevState: { success: boolean; message: string } = { success: false, message: "" },
+	prevState: ActionState = { success: false, message: "" },
 	formData?: FormData,
 ) => {
 	void prevState;
@@ -66,7 +71,7 @@ export const updateTaskStatusAction = async (
 };
 
 export const updateTaskAction = async (
-	prevState: { success: boolean; message: string } = { success: false, message: "" },
+	prevState: ActionState = { success: false, message: "" },
 	formData?: FormData,
 ) => {
 	void prevState;
@@ -141,6 +146,32 @@ export const updateTaskAction = async (
 		return { success: true, message: "Task updated successfully" };
 	} catch (error) {
 		return { success: false, message: error instanceof Error ? error.message : "Failed to update task" };
+	}
+};
+
+export const deleteTaskAction = async (
+	prevState: ActionState = { success: false, message: "" },
+	formData?: FormData,
+) => {
+	void prevState;
+
+	if (!formData) {
+		return { success: false, message: "No form data provided" };
+	}
+
+	const id = formData.get("id")?.toString().trim();
+	const returnTo = formData.get("returnTo")?.toString().trim() || "/dashboard/tasks";
+
+	if (!id) {
+		return { success: false, message: "Task ID is required." };
+	}
+
+	try {
+		await deleteTask(id);
+		revalidateTaskViews(id, returnTo);
+		return { success: true, message: "Task deleted successfully" };
+	} catch (error) {
+		return { success: false, message: error instanceof Error ? error.message : "Failed to delete task" };
 	}
 };
 

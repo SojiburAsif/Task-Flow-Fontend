@@ -51,8 +51,17 @@ export default function MemberRow({ user }: Props) {
       try {
         if (deleteFormRef.current?.requestSubmit) {
           deleteFormRef.current.requestSubmit();
-        } else {
-          deleteFormRef.current?.submit();
+        } else if (deleteFormRef.current) {
+          // Fallback for older browsers: create a temporary submit button and click it
+          const btn = document.createElement("button");
+          btn.type = "submit";
+          btn.style.display = "none";
+          deleteFormRef.current.appendChild(btn);
+          try {
+            btn.click();
+          } finally {
+            btn.remove();
+          }
         }
       } catch (err) {
         console.error(err);

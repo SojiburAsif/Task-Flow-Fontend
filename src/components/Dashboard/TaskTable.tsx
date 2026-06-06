@@ -4,6 +4,7 @@ import React, { useEffect, useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, CircleDashed, Paperclip, Users2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Portal from "@/components/ui/portal";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -415,23 +416,25 @@ export function TaskTable({ tasks, returnTo, statusEditable = false, allowAssign
 
 			{editTask ? (
 				<AnimatePresence>
-					<motion.div
-						initial={{ y: 300, opacity: 0 }}
-						animate={{ y: 0, opacity: 1 }}
-						exit={{ y: 300, opacity: 0 }}
-						className="fixed inset-x-0 bottom-0 z-50 flex items-end justify-center"
-						key="task-edit-sheet"
-					>
-						<div className="absolute inset-0 bg-black/40" onClick={() => setEditTask(null)} />
-						<div className="relative w-full max-w-3xl rounded-t-2xl bg-white p-4 shadow-2xl dark:bg-zinc-950">
-							<div className="mx-auto max-w-3xl">
-								<TaskEditForm task={editTask!} mode="full" returnTo={returnTo} />
-								<div className="mt-4 flex justify-end">
-									<button onClick={() => setEditTask(null)} className="px-4 py-2 text-sm">Close</button>
+					<Portal>
+						<motion.div
+							initial={{ y: 300, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							exit={{ y: 300, opacity: 0 }}
+							className="fixed inset-x-0 bottom-0 z-50 flex items-end justify-center"
+							key="task-edit-sheet"
+						>
+							<div className="absolute inset-0 bg-black/40" onClick={() => setEditTask(null)} />
+							<div className="relative w-full max-w-3xl rounded-t-2xl bg-white p-4 shadow-2xl dark:bg-zinc-950">
+								<div className="mx-auto max-w-3xl">
+									<TaskEditForm task={editTask!} mode="full" returnTo={returnTo} />
+									<div className="mt-4 flex justify-end">
+										<button onClick={() => setEditTask(null)} className="px-4 py-2 text-sm">Close</button>
+									</div>
 								</div>
 							</div>
-						</div>
-					</motion.div>
+						</motion.div>
+					</Portal>
 				</AnimatePresence>
 			) : null}
 

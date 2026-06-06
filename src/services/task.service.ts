@@ -197,3 +197,50 @@ export const updateTask = async (id: string, payload: TaskUpdatePayload): Promis
     throw new Error("Failed to update task");
   }
 };
+
+  export const deleteTask = async (id: string): Promise<void> => {
+    if (!id.trim()) {
+      throw new Error("Task ID is required.");
+    }
+
+    try {
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get(authCookieNames.accessToken)?.value;
+      const refreshToken = cookieStore.get(authCookieNames.refreshToken)?.value;
+      const sessionToken = cookieStore.get(authCookieNames.sessionToken)?.value;
+
+      const proxyEnv = getProxyEnv();
+      const res = await fetch(`${proxyEnv.BASE_API_URL}/tasks/${id}`, {
+        method: "DELETE",
+        headers: {
+          Cookie: buildCookieHeader(accessToken, refreshToken, sessionToken),
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          ...(sessionToken ? { "x-session-token": sessionToken } : {}),
+        },
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        let body: unknown = null;
+        try {
+          body = await res.json();
+        } catch {
+          try {
+            body = await res.text();
+          } catch {
+            body = null;
+          }
+        }
+
+        const statusInfo = `HTTP ${res.status} ${res.statusText}`;
+        const bodyMessage = body && typeof body === "object" ? JSON.stringify(body) : String(body ?? "");
+        throw new Error(bodyMessage ? `${statusInfo}: ${bodyMessage}` : `${statusInfo}: Failed to delete task`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error("Failed to delete task");
+    }
+  };

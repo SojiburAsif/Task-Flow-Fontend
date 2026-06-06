@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useActionState, useEffect } from "react";
+import React, { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateTaskAction } from "@/services/task.actions";
+import { deleteTaskAction, updateTaskAction } from "@/services/task.actions";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 
 const statusLabel: Record<TaskStatusValue, string> = {
@@ -59,6 +60,9 @@ export type TaskEditFormProps = {
 export function TaskEditForm({ task, mode, returnTo }: TaskEditFormProps) {
 	const currentStatus = normalizeStatus(task.status);
 	const [state, formAction, pending] = useActionState(updateTaskAction, { success: false, message: "" });
+	const [deleteState, deleteAction, deletePending] = useActionState(deleteTaskAction, { success: false, message: "" });
+	const deleteFormRef = useRef<HTMLFormElement | null>(null);
+	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
 	useEffect(() => {
 		if (!state) return;
@@ -68,6 +72,18 @@ export function TaskEditForm({ task, mode, returnTo }: TaskEditFormProps) {
 			toast.error(state.message);
 		}
 	}, [state]);
+
+	useEffect(() => {
+		if (!deleteState) return;
+		if (deleteState.success) {
+			toast.success(deleteState.message || "Task deleted");
+			window.setTimeout(() => {
+				window.location.assign(returnTo);
+			}, 500);
+		} else if (deleteState.message) {
+			toast.error(deleteState.message);
+		}
+	}, [deleteState, returnTo]);
 
 	const canEditEverything = mode === "full";
 	const statuses = canEditEverything ? allStatuses : allowedStatuses(currentStatus);
@@ -189,7 +205,58 @@ export function TaskEditForm({ task, mode, returnTo }: TaskEditFormProps) {
 							Back
 						</Link>
 					</div>
+
 				</form>
+
+				{canEditEverything ? (
+					<>
+						<form
+							ref={(el) => { deleteFormRef.current = el; }}
+							action={deleteAction}
+							className="mt-4"
+						>
+							<input type="hidden" name="id" value={task.id} />
+							<input type="hidden" name="returnTo" value={returnTo} />
+						</form>
+
+						<div className="mt-4">
+							<button
+								type="button"
+								onClick={() => setDeleteConfirmOpen(true)}
+								className="rounded-none bg-rose-600 px-5 py-2.5 font-bold text-white hover:bg-rose-700"
+								disabled={deletePending}
+							>
+								{deletePending ? "Deleting..." : "Delete task"}
+							</button>
+						</div>
+
+						<ConfirmDialog
+							open={deleteConfirmOpen}
+							title="Confirm task delete"
+							description="Delete this task and all its data. This cannot be undone."
+							confirmLabel="Delete task"
+							cancelLabel="Cancel"
+							loading={deletePending}
+							onClose={() => setDeleteConfirmOpen(false)}
+							onConfirm={() => {
+								setDeleteConfirmOpen(false);
+								const f = deleteFormRef.current;
+								try {
+									if (f?.requestSubmit) f.requestSubmit();
+									else if (f) {
+										const btn = document.createElement('button');
+										btn.type = 'submit';
+										btn.style.display = 'none';
+										f.appendChild(btn);
+										try { btn.click(); } finally { btn.remove(); }
+									}
+								} catch (err) {
+									console.error(err);
+								}
+							}}
+						/>
+					</>
+				) : null}
 			</CardContent>
 		</Card>
 	);

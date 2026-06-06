@@ -123,7 +123,7 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                       <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Upload a new avatar</p>
                       <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400 mt-1">PNG, JPG, WEBP supported. Your uploaded image will be previewed here automatically.</p>
                     </div>
-                    
+
                     {/* Fixed File Input (Screenshot Fix) */}
                     <input
                       id="settings-avatar"
@@ -170,12 +170,12 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                 <Label htmlFor="settings-name" className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</Label>
                 <div className="relative">
                   <UserRound className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-zinc-400" />
-                  <Input 
-                    id="settings-name" 
-                    name="name" 
-                    defaultValue={user.name} 
-                    placeholder="Your full name" 
-                    required 
+                  <Input
+                    id="settings-name"
+                    name="name"
+                    defaultValue={user.name}
+                    placeholder="Your full name"
+                    required
                     className="h-11 border border-zinc-300 bg-zinc-50/50 pl-10 text-zinc-950 transition-all placeholder:text-zinc-400 focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white"
                   />
                 </div>
@@ -185,19 +185,19 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                 <Label htmlFor="settings-email" className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Email Address</Label>
                 <div className="relative">
                   <Mail className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-zinc-400" />
-                  <Input 
-                    id="settings-email" 
-                    value={user.email} 
-                    disabled 
-                    readOnly 
+                  <Input
+                    id="settings-email"
+                    value={user.email}
+                    disabled
+                    readOnly
                     className="h-11 border border-zinc-200 bg-zinc-100 pl-10 text-zinc-500 cursor-not-allowed rounded-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500"
                   />
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-purple-600 font-bold text-white hover:bg-purple-700 shadow-none transition-all rounded-none mt-2" 
+              <Button
+                type="submit"
+                className="w-full h-11 bg-purple-600 font-bold text-white hover:bg-purple-700 shadow-none transition-all rounded-none mt-2"
                 disabled={profilePending}
               >
                 <Save className="mr-2 h-4 w-4" />
@@ -220,16 +220,17 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
           </CardHeader>
           <CardContent className="p-6 sm:p-8">
             <form action={passwordAction} className="space-y-5">
-              
+
               <div className="space-y-2">
                 <Label htmlFor="current-password" className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Current Password</Label>
                 <div className="relative">
                   <Lock className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-zinc-400" />
-                  <Input 
-                    id="current-password" 
-                    name="currentPassword" 
-                    type={showCurrentPassword ? "text" : "password"} 
-                    required 
+                  <Input
+                    id="current-password"
+                    name="currentPassword"
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Enter your current password"
+                    required
                     className="h-11 border border-zinc-300 bg-zinc-50/50 pl-10 pr-10 text-zinc-950 transition-all placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white"
                   />
                   <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-3 my-auto text-zinc-400 hover:text-zinc-600 transition-colors dark:hover:text-zinc-300" aria-label="Toggle visibility">
@@ -242,11 +243,12 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                 <Label htmlFor="new-password" className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">New Password</Label>
                 <div className="relative">
                   <Lock className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-zinc-400" />
-                  <Input 
-                    id="new-password" 
-                    name="newPassword" 
-                    type={showNewPassword ? "text" : "password"} 
-                    required 
+                  <Input
+                    id="new-password"
+                    name="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder={"Must be at least 8 characters"}
+                    required
                     className="h-11 border border-zinc-300 bg-zinc-50/50 pl-10 pr-10 text-zinc-950 transition-all placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-3 my-auto text-zinc-400 hover:text-zinc-600 transition-colors dark:hover:text-zinc-300" aria-label="Toggle visibility">
@@ -259,11 +261,12 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                 <Label htmlFor="confirm-password" className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-zinc-400" />
-                  <Input 
-                    id="confirm-password" 
-                    name="confirmPassword" 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    required 
+                  <Input
+                    id="confirm-password"
+                    name="confirmPassword"
+                    placeholder="Confirm your new password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
                     className="h-11 border border-zinc-300 bg-zinc-50/50 pl-10 pr-10 text-zinc-950 transition-all placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-none dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white"
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-3 my-auto text-zinc-400 hover:text-zinc-600 transition-colors dark:hover:text-zinc-300" aria-label="Toggle visibility">
@@ -275,10 +278,10 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
               {/* Revoke Sessions Checkbox Container */}
               <div className="border border-zinc-300 bg-zinc-50 p-4 rounded-none dark:border-zinc-700 dark:bg-zinc-900/50">
                 <label className="flex cursor-pointer select-none items-start sm:items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  <input 
-                    type="checkbox" 
-                    name="revokeOtherSessions" 
-                    className="mt-0.5 sm:mt-0 h-4 w-4 shrink-0 rounded-none border-zinc-300 text-purple-600 focus:ring-purple-500 dark:border-zinc-600 dark:bg-zinc-900 dark:checked:bg-purple-500" 
+                  <input
+                    type="checkbox"
+                    name="revokeOtherSessions"
+                    className="mt-0.5 sm:mt-0 h-4 w-4 shrink-0 rounded-none border-zinc-300 text-purple-600 focus:ring-purple-500 dark:border-zinc-600 dark:bg-zinc-900 dark:checked:bg-purple-500"
                   />
                   <div>
                     <span className="block font-bold text-zinc-900 dark:text-zinc-100">Revoke other active sessions</span>
@@ -287,9 +290,9 @@ export function SettingsPanel({ user, title, description, roleLabel }: SettingsP
                 </label>
               </div>
 
-              <Button 
-                type="submit" 
-                className="mt-2 h-11 w-full bg-zinc-900 font-bold text-white shadow-none transition-all hover:bg-zinc-800 rounded-none dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200" 
+              <Button
+                type="submit"
+                className="mt-2 h-11 w-full bg-zinc-900 font-bold text-white shadow-none transition-all hover:bg-zinc-800 rounded-none dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
                 disabled={passwordPending}
               >
                 <ShieldCheck className="mr-2 h-4 w-4" />

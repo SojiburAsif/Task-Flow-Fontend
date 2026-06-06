@@ -179,22 +179,7 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-              {/* Show toast and navigate on login/register/demo success */}
-              {state?.success && (
-                (() => {
-                  toast.success(state.message || 'Signed in');
-                  router.push('/dashboard');
-                  return null;
-                })()
-              )}
-
-              {demoState?.success && (
-                (() => {
-                  toast.success(demoState.message || 'Signed in');
-                  router.push('/dashboard');
-                  return null;
-                })()
-              )}
+              {/* Show toast and navigate on login/register/demo success handled in effects above */}
 
             <p className={`text-center text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
               Don't have an account?{' '}
