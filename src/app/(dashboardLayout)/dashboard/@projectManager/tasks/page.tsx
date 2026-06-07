@@ -19,6 +19,7 @@ export default async function ProjectManagerTasksPage() {
 				title="Task Management"
 				description="Monitor every active task across the workspace, keep an eye on deadlines, and push updates directly from the board."
 				roleLabel={user?.role ? `${user.role} panel` : "Project manager workspace"}
+				currentUser={user}
 				returnTo="/dashboard/tasks"
 				canCreateTask
 				statusEditable

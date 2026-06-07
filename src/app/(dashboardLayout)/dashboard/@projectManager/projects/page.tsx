@@ -19,6 +19,7 @@ export default async function Project() {
         description="Track the projects you are working on, the people attached to them, and the current status at a glance."
         roleLabel={user?.role ? `${user.role} panel` : "Project manager workspace"}
         canEdit={canEdit}
+          currentUser={user}
         hideTaskSection={true}
       />
     </div>

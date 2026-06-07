@@ -19,6 +19,7 @@ export default async function MyTaskPage() {
         title="My Tasks"
         description="Work through your assigned tasks, update progress, and keep delivery moving without leaving the dashboard."
         roleLabel={user?.role ? `${user.role} panel` : "Team member workspace"}
+        currentUser={user}
         returnTo="/dashboard/my-tasks"
         statusEditable
         allowAssignmentEdit={false}

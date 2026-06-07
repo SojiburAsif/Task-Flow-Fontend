@@ -9,6 +9,7 @@ import { TaskTable } from "./TaskTable";
 import { createTaskAction } from "../../services/task.actions";
 import type { ProjectRecord } from "../../services/project.service";
 import type { TaskRecord, TaskStatusValue } from "../../services/task.service";
+import type { CurrentUser } from "@/lib/currentUser";
 import { clearDashboardModalTarget, readDashboardModalTarget } from "@/components/shared/DashboardModalLink";
 
 type TaskBoardProps = {
@@ -23,6 +24,7 @@ type TaskBoardProps = {
 	projects?: ProjectRecord[];
 	allowAssignmentEdit?: boolean;
 	allowTaskEdit?: boolean;
+	currentUser?: CurrentUser | null;
 };
 
 const normalizeStatus = (status?: string | null): TaskStatusValue => {
@@ -47,6 +49,7 @@ export function TaskBoard({
 	projects,
 	allowAssignmentEdit = false,
 	allowTaskEdit = false,
+	currentUser = null,
 }: TaskBoardProps) {
 	const [openProjectModal, setOpenProjectModal] = useState<ProjectRecord | null>(null);
 	const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -238,6 +241,7 @@ export function TaskBoard({
 						statusEditable={statusEditable}
 						allowAssignmentEdit={allowAssignmentEdit}
 						allowTaskEdit={allowTaskEdit}
+						currentUser={currentUser}
 					/>
 					</div>
 				) : null}

@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { TaskTable } from "@/components/Dashboard/TaskTable";
+import CommentCenter from "@/components/Dashboard/CommentCenter";
 import ProjectEditModal from "@/components/Dashboard/ProjectEditModal";
 import { clearDashboardModalTarget, readDashboardModalTarget } from "@/components/shared/DashboardModalLink";
 import { createTaskAction } from "@/services/task.actions";
 import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 import type { ProjectRecord } from "@/services/project.service";
 import type { UserProfile } from "@/services/user.service";
+import type { CurrentUser } from "@/lib/currentUser";
 
 type TaskBoardProps = {
   tasks?: TaskRecord[];
@@ -28,6 +30,7 @@ type TaskBoardProps = {
   users?: UserProfile[];
   allowAssignmentEdit?: boolean;
   allowTaskEdit?: boolean;
+  currentUser?: CurrentUser | null;
 };
 
 const normalizeStatus = (status?: string | null): TaskStatusValue => {
@@ -75,6 +78,7 @@ export function TeamBoard({
   users,
   allowAssignmentEdit = false,
   allowTaskEdit = false,
+  currentUser = null,
 }: TaskBoardProps) {
   const stats = {
     total: tasks.length,
@@ -341,6 +345,7 @@ export function TeamBoard({
                 statusEditable={statusEditable}
                 allowAssignmentEdit={allowAssignmentEdit}
                 allowTaskEdit={allowTaskEdit}
+                currentUser={currentUser}
               />
             </div>
           </>
@@ -418,6 +423,23 @@ export function TeamBoard({
                     <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 pl-1">Unassigned</p>
                   )}
                 </div>
+
+                <CommentCenter
+                  mode="task"
+                  title="Task Comments"
+                  taskId={openTaskModal.id}
+                  taskContext={{
+                    id: openTaskModal.id,
+                    title: openTaskModal.title,
+                    status: openTaskModal.status,
+                    project: {
+                      id: openTaskModal.project.id,
+                      name: openTaskModal.project.name,
+                    },
+                  }}
+                  currentUser={currentUser}
+                  allowCompose
+                />
               </div>
             </motion.div>
           </motion.div>

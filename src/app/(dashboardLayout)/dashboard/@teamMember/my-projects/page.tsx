@@ -17,6 +17,7 @@ export default async function MyProjectPage() {
         title="My Projects"
         description="Projects you own or belong to are collected here with quick access to the full project view."
         roleLabel={user?.role ? `${user.role} workspace` : "Team member workspace"}
+        currentUser={user}
         canEdit={canEdit}
       />
     </div>

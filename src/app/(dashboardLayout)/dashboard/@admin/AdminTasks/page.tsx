@@ -17,6 +17,7 @@ export default async function AdminAllTasks() {
         title="All Tasks"
         description="Review and manage the full task queue across the system with deadline, priority, and project context."
         roleLabel={user?.role ? `${user.role} panel` : "Admin workspace"}
+        currentUser={user}
         returnTo="/dashboard/AdminTasks"
         statusEditable
         allowAssignmentEdit

@@ -16,6 +16,7 @@ export default async function AllProjectsAdmin() {
         title="Admin Project Console"
         description="Inspect every project in the workspace, review assigned members, and jump into a project detail view for deeper control."
         roleLabel={user?.role ? `${user.role} panel` : "Admin workspace"}
+        currentUser={user}
         canEdit={canEdit}
       />
     </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useActionState, useMemo, useState } from "react";
-import Link from "next/link";
 import { ArrowUpRight, CalendarDays, CircleDashed, Paperclip, Users2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Portal from "@/components/ui/portal";
@@ -10,10 +9,12 @@ import DashboardModalLink from "@/components/shared/DashboardModalLink";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import CommentCenter from "@/components/Dashboard/CommentCenter";
 import { updateTaskStatusAction } from "@/services/task.actions";
 import type { TaskRecord, TaskStatusValue } from "@/services/task.service";
 import { TaskEditForm } from "@/components/Dashboard/TaskEditForm";
 import { getProjectDetailsHref } from "@/lib/dashboard-links";
+import type { CurrentUser } from "@/lib/currentUser";
 
 const statusLabel: Record<TaskStatusValue, string> = {
 	Todo: "To Do",
@@ -127,6 +128,7 @@ export type TaskTableProps = {
 	statusEditable?: boolean;
 	allowAssignmentEdit?: boolean;
 	allowTaskEdit?: boolean;
+	currentUser?: CurrentUser | null;
 };
 
 function TaskRow({
@@ -135,6 +137,7 @@ function TaskRow({
 	statusEditable,
 	allowAssignmentEdit,
 	allowTaskEdit,
+	currentUser,
 	isExpanded,
 	onToggleDetails,
 	onViewProject,
@@ -145,6 +148,7 @@ function TaskRow({
 	statusEditable: boolean;
 	allowAssignmentEdit: boolean;
 	allowTaskEdit: boolean;
+	currentUser?: CurrentUser | null;
 	isExpanded: boolean;
 	onToggleDetails: () => void;
 	onViewProject: () => void;
@@ -327,6 +331,25 @@ function TaskRow({
 								)}
 							</div>
 						</div>
+
+						<div className="mt-4">
+							<CommentCenter
+								mode="task"
+								title="Task Comments"
+								taskId={task.id}
+								taskContext={{
+									id: task.id,
+									title: task.title,
+									status: task.status,
+									project: {
+										id: task.project.id,
+										name: task.project.name,
+									},
+								}}
+								currentUser={currentUser}
+								allowCompose
+							/>
+						</div>
 					</td>
 				</tr>
 			) : null}
@@ -334,7 +357,7 @@ function TaskRow({
 	);
 }
 
-export function TaskTable({ tasks, returnTo, initialTaskId = null, statusEditable = false, allowAssignmentEdit = false, allowTaskEdit = false }: TaskTableProps) {
+export function TaskTable({ tasks, returnTo, initialTaskId = null, statusEditable = false, allowAssignmentEdit = false, allowTaskEdit = false, currentUser = null }: TaskTableProps) {
  	const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 	const [openProjectModal, setOpenProjectModal] = useState<TaskRecord["project"] | null>(null);
 	// search and status filter removed — keep table client-side simple for now
@@ -416,6 +439,7 @@ export function TaskTable({ tasks, returnTo, initialTaskId = null, statusEditabl
 							statusEditable={statusEditable}
 							allowAssignmentEdit={allowAssignmentEdit}
 							allowTaskEdit={allowTaskEdit}
+								currentUser={currentUser}
 							isExpanded={expandedTaskId === task.id}
 								onToggleDetails={() => toggleDetails(task.id)}
 								onViewProject={() => setOpenProjectModal(task.project)}

@@ -14,6 +14,7 @@ export default async function MyTeams() {
         title="My Project Teams"
         description="See the people behind each project, review ownership, and jump into the project detail when you need the full picture."
         roleLabel={user?.role ? `${user.role} panel` : "Project manager workspace"}
+          currentUser={user}
       />
     </div>
   );

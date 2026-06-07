@@ -31,6 +31,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 				title="Projects"
 				description="Open a project to review its members, deadline, and status. This page now reads from the dedicated project API helpers."
 				roleLabel={user?.role ? `${user.role} workspace` : "Projects workspace"}
+				currentUser={user}
 				canEdit={canEdit}
 			/>
 		</div>

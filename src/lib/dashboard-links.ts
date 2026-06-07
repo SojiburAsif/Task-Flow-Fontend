@@ -40,6 +40,9 @@ export const getTaskDetailsHref = (taskId: string, returnTo?: string) => {
 		return "/dashboard/tasks";
 	}
 
-	void returnTo;
-	return "/dashboard/projects";
+	if (returnTo && returnTo.startsWith("/dashboard")) {
+		return `/dashboard/tasks/${taskId}?returnTo=${encodeURIComponent(returnTo)}`;
+	}
+
+	return `/dashboard/tasks/${taskId}`;
 };
