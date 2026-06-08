@@ -12,7 +12,8 @@ interface FloatingIconProps {
   x: string;
   y: string;
   size: number;
-  color: string;
+  colorLight: string;
+  colorDark: string;
 }
 
 const containerVariants: Variants = {
@@ -32,15 +33,15 @@ const itemVariants: Variants = {
   },
 };
 
-const FloatingBackground: React.FC = () => {
+const FloatingBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const icons: FloatingIconProps[] = [
-    { icon: FileText, x: "8%", y: "15%", size: 36, color: "text-purple-600/20 dark:text-purple-400/10" },
-    { icon: ShoppingBag, x: "88%", y: "12%", size: 40, color: "text-indigo-600/20 dark:text-indigo-400/10" },
-    { icon: Users, x: "12%", y: "72%", size: 44, color: "text-purple-500/20 dark:text-purple-500/10" },
-    { icon: DollarSign, x: "82%", y: "78%", size: 38, color: "text-fuchsia-600/20 dark:text-fuchsia-400/10" },
-    { icon: Package, x: "50%", y: "35%", size: 32, color: "text-violet-600/20 dark:text-violet-400/10" },
-    { icon: TrendingUp, x: "6%", y: "48%", size: 42, color: "text-indigo-500/20 dark:text-indigo-500/10" },
-    { icon: Zap, x: "92%", y: "52%", size: 34, color: "text-purple-600/20 dark:text-purple-400/10" },
+    { icon: FileText, x: "8%", y: "15%", size: 36, colorLight: "text-purple-600/20", colorDark: "text-purple-400/10" },
+    { icon: ShoppingBag, x: "88%", y: "12%", size: 40, colorLight: "text-indigo-600/20", colorDark: "text-indigo-400/10" },
+    { icon: Users, x: "12%", y: "72%", size: 44, colorLight: "text-purple-500/20", colorDark: "text-purple-500/10" },
+    { icon: DollarSign, x: "82%", y: "78%", size: 38, colorLight: "text-fuchsia-600/20", colorDark: "text-fuchsia-400/10" },
+    { icon: Package, x: "50%", y: "35%", size: 32, colorLight: "text-violet-600/20", colorDark: "text-violet-400/10" },
+    { icon: TrendingUp, x: "6%", y: "48%", size: 42, colorLight: "text-indigo-500/20", colorDark: "text-indigo-500/10" },
+    { icon: Zap, x: "92%", y: "52%", size: 34, colorLight: "text-purple-600/20", colorDark: "text-purple-400/10" },
   ];
 
   return (
@@ -50,7 +51,7 @@ const FloatingBackground: React.FC = () => {
         return (
           <motion.div
             key={index}
-            className={`absolute ${item.color}`}
+            className={`absolute ${isDark ? item.colorDark : item.colorLight}`}
             style={{ left: item.x, top: item.y }}
             initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: [0, 15, 0], rotate: [0, 10, -10, 0] }}
@@ -153,14 +154,16 @@ export default function HeroSection() {
     setSearchResults([]);
   };
 
+  if (!mounted) return null;
+
   return (
-    <section className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-24 ${isDark ? "bg-black text-white" : "bg-zinc-50 text-zinc-950"}`}>
+    <section className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-24 transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-zinc-50 text-zinc-950"}`}>
       
-      {/* Background Gradients */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.12),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.15),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[linear-gradient(to_bottom,rgba(168,85,247,0.1)_0%,transparent_100%)]" />
+      {/* Background Gradients (Pure JS Toggle) */}
+      <div className={`pointer-events-none absolute inset-0 -z-10 ${isDark ? "bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.15),transparent_45%)]" : "bg-[radial-gradient(circle_at_top,rgba(147,51,234,0.12),transparent_45%)]"}`} />
+      <div className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 ${isDark ? "bg-[linear-gradient(to_bottom,rgba(168,85,247,0.1)_0%,transparent_100%)]" : "bg-[linear-gradient(to_bottom,rgba(168,85,247,0.1)_0%,transparent_100%)]"}`} />
       
-      <FloatingBackground />
+      <FloatingBackground isDark={isDark} />
 
       <motion.div
         className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 w-full text-center"
@@ -170,11 +173,11 @@ export default function HeroSection() {
       >
         {/* Sub Badge (Sharp Brutalist) */}
         <motion.div variants={itemVariants} className={`mb-8 inline-flex items-center gap-2 border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] rounded-none ${isDark ? "border-purple-500/30 bg-purple-500/10 text-purple-400" : "border-purple-200 bg-purple-50 text-purple-700"}`}>
-          <Zap size={13} className="text-purple-500" /> Automate Your Workflow
+          <Zap size={13} className={isDark ? "text-purple-400" : "text-purple-600"} /> Automate Your Workflow
         </motion.div>
 
         {/* Main Heading with Looping Highlight */}
-        <motion.h1 className="mb-6 text-4xl font-black leading-[1.15] tracking-tight sm:text-6xl md:text-7xl" variants={itemVariants}>
+        <motion.h1 className={`mb-6 text-4xl font-black leading-[1.15] tracking-tight sm:text-6xl md:text-7xl ${isDark ? "text-white" : "text-zinc-950"}`} variants={itemVariants}>
           Simplify Billing and <br className="hidden sm:block" />
           <motion.span 
             className={`relative inline-block px-4 py-1 mx-2 mt-2 sm:mt-0 bg-purple-600 text-white rounded-none border border-purple-700 ${isDark ? 'shadow-[4px_4px_0px_0px_rgba(168,85,247,0.5)]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]'}`}
@@ -194,7 +197,7 @@ export default function HeroSection() {
         </motion.h1>
 
         {/* Description */}
-        <motion.p className={`mx-auto mb-12 max-w-2xl text-sm font-medium leading-relaxed sm:text-base ${isDark ? "text-zinc-400" : "text-zinc-500"}`} variants={itemVariants}>
+        <motion.p className={`mx-auto mb-12 max-w-2xl text-sm font-medium leading-relaxed sm:text-base ${isDark ? "text-zinc-400" : "text-zinc-600"}`} variants={itemVariants}>
           No more manual math. The ultimate SaaS solution to manage your workspace&#39;s <br className="hidden md:block" />
           projects, staff tasks, and profit analytics in one secure dashboard.
         </motion.p>
@@ -203,7 +206,7 @@ export default function HeroSection() {
             COMMAND SEARCH BAR & DROPDOWN (Sharp)
         ============================================= */}
         <motion.div className="mx-auto mb-16 max-w-2xl relative z-50" variants={itemVariants} ref={searchRef}>
-          <div className={`relative flex items-center border-2 transition-all p-1.5 ${isDark ? "border-zinc-800 bg-zinc-950 focus-within:border-purple-500" : "border-zinc-200 bg-white focus-within:border-purple-500 shadow-sm"}`}>
+          <div className={`relative flex items-center border-2 transition-all p-1.5 ${isDark ? "border-zinc-800 bg-zinc-950 focus-within:border-purple-500" : "border-zinc-300 bg-white focus-within:border-purple-500 shadow-sm"}`}>
             <div className={`pl-4 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
               <Search size={20} strokeWidth={2.5} />
             </div>
@@ -213,10 +216,10 @@ export default function HeroSection() {
               onChange={handleSearch}
               onFocus={() => searchQuery.trim().length > 0 && setIsSearching(true)}
               placeholder="Search projects, tasks, or reports..."
-              className={`w-full bg-transparent px-4 py-3.5 text-sm font-bold outline-none placeholder:text-zinc-400 placeholder:font-medium ${isDark ? "text-white" : "text-zinc-900"}`}
+              className={`w-full bg-transparent px-4 py-3.5 text-sm font-bold outline-none placeholder:font-medium ${isDark ? "text-white placeholder:text-zinc-500" : "text-zinc-900 placeholder:text-zinc-400"}`}
             />
             {searchQuery && (
-              <button type="button" onClick={clearSearch} className="mr-2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+              <button type="button" onClick={clearSearch} className={`mr-2 p-1 transition-colors ${isDark ? "text-zinc-400 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"}`}>
                 <X size={16} />
               </button>
             )}
@@ -252,26 +255,26 @@ export default function HeroSection() {
                           rel={item.target === "_blank" ? "noreferrer noopener" : undefined}
                           modalTarget={item.type === "project" || item.type === "task" ? { type: item.type, id: item.id } : null}
                           onClick={clearSearch}
-                        className={`flex items-center justify-between border-b last:border-b-0 p-4 transition-colors ${isDark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-100 hover:bg-zinc-50"}`}
+                        className={`flex items-center justify-between border-b last:border-b-0 p-4 transition-colors ${isDark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-200 hover:bg-zinc-50"}`}
                         >
                         <div className="flex items-center gap-3">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center border rounded-none ${item.type === "project" ? "border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-400" : item.type === "task" ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400" : "border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"}`}>
+                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center border rounded-none ${item.type === "project" ? isDark ? "border-purple-900/50 bg-purple-900/20 text-purple-400" : "border-purple-200 bg-purple-50 text-purple-600" : item.type === "task" ? isDark ? "border-blue-900/50 bg-blue-900/20 text-blue-400" : "border-blue-200 bg-blue-50 text-blue-600" : isDark ? "border-zinc-800 bg-zinc-900 text-zinc-300" : "border-zinc-200 bg-zinc-50 text-zinc-600"}`}>
                               {item.type === "project" ? <FolderGit2 size={16} /> : item.type === "task" ? <CheckSquare size={16} /> : <Search size={16} />}
                           </div>
                           <div>
                             <p className={`text-sm font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{item.title}</p>
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-0.5">{item.subtitle || item.type}</p>
+                              <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{item.subtitle || item.type}</p>
                           </div>
                         </div>
-                          <span className={`border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${item.type === "site" ? "bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800" : item.status === "Active" || item.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400" : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400"}`}>
+                          <span className={`border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${item.type === "site" ? isDark ? "bg-zinc-900 text-zinc-300 border-zinc-800" : "bg-zinc-50 text-zinc-600 border-zinc-200" : item.status === "Active" || item.status === "Completed" ? isDark ? "bg-emerald-900/30 border-emerald-800 text-emerald-400" : "bg-emerald-50 text-emerald-600 border-emerald-200" : isDark ? "bg-amber-900/30 border-amber-800 text-amber-400" : "bg-amber-50 text-amber-600 border-amber-200"}`}>
                             {item.status || item.type}
                         </span>
                       </DashboardModalLink>
                     ))
                   ) : (
                     <div className="p-8 text-center">
-                        <p className={`text-sm font-bold ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{isLoading ? "Searching..." : `No results found for "${searchQuery}"`}</p>
-                        <p className="text-xs text-zinc-500 mt-1">Try searching for &quot;Project&quot;, &quot;Task&quot;, or &quot;Dashboard&quot;</p>
+                        <p className={`text-sm font-bold ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>{isLoading ? "Searching..." : `No results found for "${searchQuery}"`}</p>
+                        <p className={`text-xs mt-1 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Try searching for &quot;Project&quot;, &quot;Task&quot;, or &quot;Dashboard&quot;</p>
                     </div>
                   )}
                 </div>
@@ -291,14 +294,14 @@ export default function HeroSection() {
         {/* =========================================
             STATS GRID (Brutalist)
         ============================================= */}
-        <div className="relative z-10 grid w-full grid-cols-1 items-center gap-6 border-t pt-12 md:grid-cols-3 dark:border-zinc-800 border-zinc-200">
-          <motion.div className="text-center md:text-left p-4 border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 rounded-none shadow-none" variants={itemVariants}>
+        <div className={`relative z-10 grid w-full grid-cols-1 items-center gap-6 border-t pt-12 md:grid-cols-3 ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+          <motion.div className={`text-center md:text-left p-4 border rounded-none shadow-none ${isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-200 bg-white"}`} variants={itemVariants}>
             <h3 className={`text-4xl font-black tracking-tight ${isDark ? "text-white" : "text-zinc-900"}`}>12K+</h3>
-            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Active Workspaces</p>
+            <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Active Workspaces</p>
           </motion.div>
 
           <motion.div className="flex flex-col gap-3 justify-center" variants={itemVariants}>
-            <button className="flex items-center justify-center gap-2 border border-purple-600 bg-purple-600 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-purple-700 rounded-none shadow-none active:scale-95">
+            <button className={`flex items-center justify-center gap-2 border px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none shadow-none active:scale-95 ${isDark ? "border-purple-600 bg-purple-600 text-white hover:bg-purple-500" : "border-purple-600 bg-purple-600 text-white hover:bg-purple-700"}`}>
               <Zap size={14} fill="white" /> Get Started Now
             </button>
             <button className={`border px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none shadow-none active:scale-95 ${isDark ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white" : "border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-400"}`}>
@@ -306,9 +309,9 @@ export default function HeroSection() {
             </button>
           </motion.div>
 
-          <motion.div className="text-center md:text-right p-4 border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 rounded-none shadow-none" variants={itemVariants}>
+          <motion.div className={`text-center md:text-right p-4 border rounded-none shadow-none ${isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-200 bg-white"}`} variants={itemVariants}>
             <h3 className={`text-4xl font-black tracking-tight ${isDark ? "text-white" : "text-zinc-900"}`}>$2M+</h3>
-            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Processed Monthly</p>
+            <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Processed Monthly</p>
           </motion.div>
         </div>
       </motion.div>

@@ -48,18 +48,18 @@ export default async function DashboardLayout(props: any) {
   return (
     <SidebarProvider>
       <AppSidebar user={userInfo} />
-      <SidebarInset className="min-h-screen overflow-x-hidden bg-zinc-50 text-zinc-950 transition-colors dark:bg-black dark:text-zinc-50">
-        <div className="sticky top-0 z-30 border-b border-zinc-200/70 bg-white/90 px-4 py-3 backdrop-blur md:hidden dark:border-zinc-800 dark:bg-zinc-950/90">
+      <SidebarInset className="min-h-screen overflow-x-hidden bg-background text-foreground transition-colors">
+        <div className="sticky top-0 z-30 border-b border-border/70 bg-background/90 px-4 py-3 backdrop-blur md:hidden">
           <div className="flex items-center gap-3">
-            <SidebarTrigger className="h-10 w-10 border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200" />
+            <SidebarTrigger className="h-10 w-10 border border-border bg-background text-foreground shadow-sm" />
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Dashboard</p>
-              <p className="truncate text-sm font-semibold text-zinc-950 dark:text-white">{user.name}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-primary">Dashboard</p>
+              <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>
             </div>
           </div>
         </div>
 
-        <main className="min-h-screen">
+        <main className="min-h-screen bg-background text-foreground">
           {renderSlot}
           {modal}
         </main>

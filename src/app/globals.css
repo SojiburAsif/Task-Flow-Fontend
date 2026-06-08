@@ -20,6 +20,12 @@
   }
 }
 
+html.light,
+:root.light {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
 html.dark,
 :root.dark {
   --background: #000000;

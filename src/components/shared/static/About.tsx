@@ -10,6 +10,7 @@ import {
   Award,
   ArrowUpRight
 } from 'lucide-react'
+import { useTheme } from '@/components/provider/theme-provider'
 
 // অ্যাডমিন / কোর টিম মেম্বারদের ডেটা অবজেক্ট
 const admins = [
@@ -18,7 +19,8 @@ const admins = [
     name: "Md Asif",
     role: "Lead Full-Stack Engineer",
     bio: "Specialized in MERN Stack, Next.js, and Cloud Architecture. Designing scalable system workflows.",
-    imageBg: "from-purple-600 to-indigo-600",
+    imageBgLight: "from-purple-600 to-indigo-600",
+    imageBgDark: "from-purple-500 to-indigo-500",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     twitter: "https://twitter.com",
@@ -29,7 +31,8 @@ const admins = [
     name: "Faria Tabassum",
     role: "Lead UI/UX Architect",
     bio: "Crafting premium, user-centric interfaces and interactive user experiences for modern SaaS.",
-    imageBg: "from-pink-500 to-rose-600",
+    imageBgLight: "from-pink-500 to-rose-600",
+    imageBgDark: "from-pink-500 to-rose-500",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     twitter: "https://twitter.com",
@@ -40,7 +43,8 @@ const admins = [
     name: "Atiquzzaman",
     role: "DevOps & Security Analyst",
     bio: "Managing continuous deployment, system optimization, and database security infrastructures.",
-    imageBg: "from-blue-600 to-cyan-500",
+    imageBgLight: "from-blue-600 to-cyan-500",
+    imageBgDark: "from-blue-500 to-cyan-500",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     twitter: "https://twitter.com",
@@ -74,8 +78,11 @@ const itemVariants: Variants = {
 
 export default function About() {
   const [mounted, setMounted] = useState(false)
+  const { resolvedTheme } = useTheme()
+  
+  const isDark = mounted && resolvedTheme === "dark"
 
-  // লিন্টার এবং হাইড্রেশন সেফ Asynchronous মাউন্ট স্টেট
+  // হাইড্রেশন এরর এড়াতে মাউন্ট হওয়ার আগে রেন্ডার বন্ধ
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setMounted(true)
@@ -83,18 +90,13 @@ export default function About() {
     return () => window.cancelAnimationFrame(frame)
   }, [])
 
-  // হাইড্রেশন এরর এড়াতে মাউন্ট হওয়ার আগে কিছুই রেন্ডার না করা ভালো
   if (!mounted) return null;
 
-  // ডাইনামিক ডার্ক মোড চেক (Tailwind class context-এর জন্য)
-  const isDarkClass = "dark:bg-black dark:text-white";
-
   return (
-    <section className={`relative w-full py-24 overflow-hidden transition-colors duration-300 bg-zinc-50 text-zinc-950 ${isDarkClass}`}>
+    <section className={`relative w-full py-24 overflow-hidden transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-zinc-50 text-zinc-950"}`}>
       
-      {/* Background Geometric Grid Effects (Matching Openings Page) */}
-      <div className="absolute inset-0 z-0 bg-transparent dark:bg-transparent" />
-      <div className="absolute inset-0 z-0 opacity-[0.03] bg-[linear-gradient(to_right,#000000_1px,transparent_1px),linear-gradient(to_bottom,#000000_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      {/* Background Geometric Grid Overlay — ❌ Gradient Color Removed */}
+      <div className={`absolute inset-0 z-0 opacity-[0.03] bg-[size:4rem_4rem] ${isDark ? "bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)]" : "bg-[linear-gradient(to_right,#000000_1px,transparent_1px),linear-gradient(to_bottom,#000000_1px,transparent_1px)]"}`} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
@@ -102,38 +104,38 @@ export default function About() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-28">
           
           <div className="lg:col-span-5 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 border border-purple-500/30 bg-purple-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] text-purple-700 rounded-none dark:border-purple-500/40 dark:bg-purple-500/10 dark:text-purple-400">
-              <Award size={13} className="text-purple-600 dark:text-purple-400" /> Who We Are
+            <div className={`inline-flex items-center gap-2 border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] rounded-none ${isDark ? "border-purple-500/40 bg-purple-500/10 text-purple-400" : "border-purple-200 bg-purple-50 text-purple-700"}`}>
+              <Award size={13} className={isDark ? "text-purple-400" : "text-purple-600"} /> Who We Are
             </div>
             
-            <h2 className="text-3xl font-black tracking-tight sm:text-5xl leading-[1.15]">
+            <h2 className={`text-3xl font-black tracking-tight sm:text-5xl leading-[1.15] ${isDark ? "text-white" : "text-zinc-950"}`}>
               Driving the Future of <br />
-              <span className="text-purple-600 dark:text-purple-400">Task Management</span>
+              <span className={isDark ? "text-purple-400" : "text-purple-600"}>Task Management</span>
             </h2>
             
-            <p className="text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p className={`text-sm font-medium leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
               TaskFlow is engineered to remove workspace friction. We provide modern engineering teams and retail networks with automated scheduling, smart analytics, and seamless administrative power to track progress effortlessly.
             </p>
           </div>
 
-          {/* Right Side Vision Cards (Sharp Design) */}
+          {/* Right Side Vision Cards */}
           <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-5">
             {highlights.map((card, i) => {
               const IconComp = card.icon;
               return (
                 <div 
                   key={i}
-                  className="group relative flex flex-col justify-between p-6 border text-left transition-all duration-300 bg-white border-zinc-200 hover:-translate-y-1 hover:shadow-xl hover:border-purple-400 rounded-none dark:bg-zinc-950 dark:border-zinc-800 dark:hover:border-purple-500/50"
+                  className={`group relative flex flex-col justify-between p-6 border text-left transition-all duration-300 rounded-none hover:-translate-y-1 hover:shadow-md ${isDark ? "bg-zinc-950 border-zinc-800 hover:border-purple-500/50" : "bg-white border-zinc-200 hover:border-purple-500"}`}
                 >
                   <div>
-                    <div className="flex h-12 w-12 items-center justify-center border border-purple-200 bg-purple-50 text-purple-600 transition-transform duration-300 group-hover:scale-110 rounded-none dark:border-purple-900/50 dark:bg-purple-900/20 dark:text-purple-400">
+                    <div className={`flex h-12 w-12 items-center justify-center border transition-transform duration-300 group-hover:scale-110 rounded-none ${isDark ? "border-purple-900/50 bg-purple-900/20 text-purple-400" : "border-purple-200 bg-purple-50 text-purple-600"}`}>
                       <IconComp size={20} strokeWidth={2} />
                     </div>
-                    <h3 className="mt-5 text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{card.title}</h3>
-                    <p className="mt-2 text-xs font-medium leading-relaxed text-zinc-500 dark:text-zinc-400">{card.desc}</p>
+                    <h3 className={`mt-5 text-base font-bold tracking-tight transition-colors ${isDark ? "text-zinc-100 group-hover:text-purple-400" : "text-zinc-900 group-hover:text-purple-600"}`}>{card.title}</h3>
+                    <p className={`mt-2 text-xs font-medium leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{card.desc}</p>
                   </div>
                   {/* Hover Line Effect */}
-                  <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-purple-600 transition-all duration-500 group-hover:w-full dark:bg-purple-500" />
+                  <div className={`absolute bottom-0 left-0 h-0.5 w-0 transition-all duration-500 group-hover:w-full ${isDark ? "bg-purple-500" : "bg-purple-600"}`} />
                 </div>
               )
             })}
@@ -142,15 +144,15 @@ export default function About() {
 
         {/* ================= Part 2: Admin / Team Showcase Panel ================= */}
         <div className="text-center mb-16">
-          <span className="inline-flex border border-zinc-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] text-zinc-500 rounded-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+          <span className={`inline-flex border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] rounded-none ${isDark ? "border-zinc-800 bg-zinc-950 text-zinc-400" : "border-zinc-200 bg-white text-zinc-500"}`}>
             Executive Council
           </span>
-          <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl text-zinc-900 dark:text-white">
-            Meet Our <span className="text-purple-600 dark:text-purple-400">Administrators</span>
+          <h2 className={`mt-4 text-3xl font-black tracking-tight sm:text-5xl ${isDark ? "text-white" : "text-zinc-900"}`}>
+            Meet Our <span className={isDark ? "text-purple-400" : "text-purple-600"}>Administrators</span>
           </h2>
         </div>
 
-        {/* Animated Admins Card Grid (Sharp & Brutalist) */}
+        {/* Animated Admins Card Grid */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto"
           initial="hidden"
@@ -162,38 +164,38 @@ export default function About() {
             <motion.div
               key={admin.id}
               variants={itemVariants}
-              className="group relative flex flex-col border p-6 text-left transition-all duration-300 bg-white border-zinc-200 hover:shadow-xl hover:-translate-y-1 hover:border-purple-400 rounded-none dark:bg-zinc-950 dark:border-zinc-800 dark:hover:border-purple-500/50"
+              className={`group relative flex flex-col border p-6 text-left transition-all duration-300 rounded-none hover:shadow-lg hover:-translate-y-1 ${isDark ? "bg-zinc-950 border-zinc-800 hover:border-purple-500/50" : "bg-white border-zinc-200 hover:border-purple-500"}`}
             >
               {/* Profile Wrapper */}
               <div className="flex items-center gap-4 mb-5">
                 {/* Sharp Geometric Avatar Container */}
-                <div className={`h-16 w-16 bg-gradient-to-tr ${admin.imageBg} flex items-center justify-center text-white text-xl font-black shadow-none shrink-0 uppercase tracking-wider rounded-none border border-zinc-200 dark:border-zinc-800`}>
+                <div className={`h-16 w-16 bg-gradient-to-tr flex items-center justify-center text-white text-xl font-black shadow-none shrink-0 uppercase tracking-wider rounded-none border ${isDark ? `border-zinc-800 ${admin.imageBgDark}` : `border-zinc-200 ${admin.imageBgLight}`}`}>
                   {admin.name.split(" ").map(n => n[0]).join("")}
                 </div>
                 
                 <div className="overflow-hidden">
-                  <h3 className="text-lg font-bold tracking-tight truncate text-zinc-900 transition-colors group-hover:text-purple-600 dark:text-zinc-100 dark:group-hover:text-purple-400">
+                  <h3 className={`text-lg font-bold tracking-tight truncate transition-colors ${isDark ? "text-zinc-100 group-hover:text-purple-400" : "text-zinc-900 group-hover:text-purple-600"}`}>
                     {admin.name}
                   </h3>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-purple-600 mt-1 dark:text-purple-400">
+                  <p className={`text-[10px] font-black uppercase tracking-wider mt-1 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
                     {admin.role}
                   </p>
                 </div>
               </div>
 
               {/* Bio Description */}
-              <p className="text-sm font-medium leading-relaxed mb-6 grow text-zinc-600 dark:text-zinc-400">
+              <p className={`text-sm font-medium leading-relaxed mb-6 grow ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 {admin.bio}
               </p>
 
-              {/* Action/Social Icons Row (Sharp Design) */}
-              <div className="flex items-center justify-between border-t pt-5 w-full border-zinc-200 dark:border-zinc-800">
+              {/* Action/Social Icons Row */}
+              <div className={`flex items-center justify-between border-t pt-5 w-full ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
                 <div className="flex items-center gap-3">
                   <a 
                     href={admin.github} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 text-zinc-500 transition-all hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 rounded-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    className={`flex h-10 w-10 items-center justify-center border transition-all rounded-none ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-purple-500/50 hover:bg-purple-900/20 hover:text-purple-400" : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600"}`}
                     aria-label="GitHub"
                   >
                     <span className="text-[10px] font-black tracking-[0.1em]">GH</span>
@@ -202,7 +204,7 @@ export default function About() {
                     href={admin.linkedin} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 text-zinc-500 transition-all hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 rounded-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    className={`flex h-10 w-10 items-center justify-center border transition-all rounded-none ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-purple-500/50 hover:bg-purple-900/20 hover:text-purple-400" : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600"}`}
                     aria-label="LinkedIn"
                   >
                     <span className="text-[10px] font-black tracking-[0.1em]">IN</span>
@@ -211,14 +213,14 @@ export default function About() {
                     href={admin.twitter} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 text-zinc-500 transition-all hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 rounded-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    className={`flex h-10 w-10 items-center justify-center border transition-all rounded-none ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-purple-500/50 hover:bg-purple-900/20 hover:text-purple-400" : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600"}`}
                     aria-label="Twitter / X"
                   >
                     <span className="text-[10px] font-black tracking-[0.1em]">X</span>
                   </a>
                   <a 
                     href={admin.mail} 
-                    className="flex h-10 w-10 items-center justify-center border border-zinc-200 bg-zinc-50 text-zinc-500 transition-all hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 rounded-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    className={`flex h-10 w-10 items-center justify-center border transition-all rounded-none ${isDark ? "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-purple-500/50 hover:bg-purple-900/20 hover:text-purple-400" : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600"}`}
                     aria-label="Email"
                   >
                     <Mail size={14} strokeWidth={2.5} />
@@ -226,13 +228,13 @@ export default function About() {
                 </div>
 
                 {/* Profile Arrow Glimpse */}
-                <span className="opacity-0 translate-y-1 text-purple-600 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0.5 dark:text-purple-400">
+                <span className={`opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0.5 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
                   <ArrowUpRight size={18} strokeWidth={2.5} />
                 </span>
               </div>
 
               {/* Bottom Decorative Hover Line */}
-              <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-purple-600 transition-all duration-500 group-hover:w-full dark:bg-purple-500" />
+              <div className={`absolute bottom-0 left-0 h-0.5 w-0 transition-all duration-500 group-hover:w-full ${isDark ? "bg-purple-500" : "bg-purple-600"}`} />
             </motion.div>
           ))}
         </motion.div>

@@ -41,14 +41,14 @@ export default async function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50 pt-24 pb-16 px-4 transition-colors duration-300 dark:bg-black sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background px-4 pb-16 pt-24 text-foreground transition-colors duration-300 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-12">
         
         {/* =========================================
             HEADER SECTION (Sharp Design)
         ============================================= */}
         <div className="relative overflow-hidden border border-zinc-200 bg-white/90 p-8 shadow-none backdrop-blur rounded-none dark:border-zinc-800 dark:bg-zinc-950/90">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-zinc-500/5 dark:from-purple-500/10 dark:to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-br from-purple-500/5 via-transparent to-zinc-500/5 dark:from-purple-500/10 dark:to-transparent" />
           
           <div className="relative flex flex-col gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3">

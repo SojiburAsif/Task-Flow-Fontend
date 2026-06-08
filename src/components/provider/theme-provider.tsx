@@ -20,7 +20,7 @@ function getSystemTheme(): Exclude<Theme, "system"> {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function applyTheme(theme: Theme, disableTransitionOnChange?: boolean) {
+function applyTheme(theme: Theme, disableTransitionOnChange?: boolean, attribute = "class") {
   if (typeof document === "undefined") {
     return;
   }
@@ -38,13 +38,22 @@ function applyTheme(theme: Theme, disableTransitionOnChange?: boolean) {
     });
   }
 
-  root.classList.toggle("dark", resolvedTheme === "dark");
+  if (attribute === "class") {
+    root.classList.remove("dark", "light");
+    root.classList.add(resolvedTheme);
+  } else {
+    root.setAttribute(attribute, resolvedTheme);
+  }
+
+  root.style.colorScheme = resolvedTheme;
 }
 
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   disableTransitionOnChange = false,
+  attribute = "class",
+  enableSystem = true,
 }: Readonly<{
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -63,23 +72,23 @@ export function ThemeProvider({
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
   React.useEffect(() => {
-    applyTheme(defaultTheme, disableTransitionOnChange);
-  }, [defaultTheme, disableTransitionOnChange]);
+    applyTheme(theme, disableTransitionOnChange, attribute);
+  }, [theme, disableTransitionOnChange, attribute]);
 
   React.useEffect(() => {
     window.localStorage.setItem("theme", theme);
-    applyTheme(theme, disableTransitionOnChange);
+    applyTheme(theme, disableTransitionOnChange, attribute);
 
-    if (theme !== "system") {
+    if (theme !== "system" || !enableSystem) {
       return;
     }
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const listener = () => applyTheme("system", disableTransitionOnChange);
+    const listener = () => applyTheme("system", disableTransitionOnChange, attribute);
 
     media.addEventListener("change", listener);
     return () => media.removeEventListener("change", listener);
-  }, [theme, disableTransitionOnChange]);
+  }, [theme, disableTransitionOnChange, attribute, enableSystem]);
 
   const value = React.useMemo(
     () => ({

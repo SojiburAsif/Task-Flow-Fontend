@@ -13,9 +13,9 @@ export default async function CommonLayout({
 
 
   return (
-    <div className="">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       <Navbar user={currentUser} />
-      <main className="">
+      <main className="min-h-screen bg-background text-foreground">
         {children}
       </main>
       <Fooder />

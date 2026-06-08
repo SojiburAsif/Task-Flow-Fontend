@@ -16,7 +16,7 @@ export default async function AnalyticsPage() {
   ];
 
   return (
-    <div className="p-6 sm:p-8 lg:p-10 mt-14">
+    <div className="mt-14 bg-background px-4 py-6 text-foreground transition-colors sm:px-8 lg:px-10 lg:py-10">
       <DashboardOverview
         title="Analytics"
         description="Workspace analytics and trends"
