@@ -12,6 +12,7 @@ export const normalizeRoleLabel = (role: string) => {
 		.join(" ");
 };
 
+// This function is used to normalize role strings from the dashboard, which may come in various formats, to a consistent format that can be used in the application logic.
 export const normalizeDashboardRole = (role: string) => {
 	const normalized = role.replace(/[_\s-]+/g, "").toLowerCase();
 
