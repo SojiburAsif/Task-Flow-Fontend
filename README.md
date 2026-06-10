@@ -1,56 +1,161 @@
-# ⚡ TaskFlow Frontend
+# ⚡ TaskFlow Frontend - Next.js 16 Dashboard Interface
 
-**High-performance, role-based collaboration platform interface.**
-
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
-![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)
-
-> Seamless UI for Admins, Project Managers, and Team Members featuring robust authentication, interactive dashboards, and real-time analytics.
+TaskFlow Frontend is a high-performance, role-based project management and task collaboration user interface. Built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**, and **Tailwind CSS v4**, the application implements Next.js Parallel Routing to present personalized workspaces dynamically adjusted to a user's role: **Admin**, **Project Manager**, or **Team Member**.
 
 ---
 
-## ✨ Key Highlights
+## 🛠️ Technology Stack & Badges
 
-- **🔒 Role-Aware Architecture:** Dynamic routing and isolated dashboard layouts tailored specifically for Admins, Project Managers, and Team Members.
-- **🛡️ Secure Authentication:** Fully protected routes, session-aware navigation, and seamless login/signup flows.
-- **📊 Interactive Dashboards:** Comprehensive analytics, visual charts (via Recharts), activity timelines, and real-time summary KPI cards.
-- **💼 Complete Workspace Control:** Advanced screens for managing projects, assigning tasks, handling notifications, and moderating user comments.
-- **⚙️ React Server Actions:** Highly optimized server actions and proxy logic that securely forward requests to the backend API without exposing sensitive credentials.
-- **🎨 Premium UI/UX:** Shared UI primitives crafted with Tailwind CSS v4, Radix UI, Framer Motion, and Sonner toast notifications for a brutalist, sharp aesthetic.
+| Category | Technology | Description |
+| :--- | :--- | :--- |
+| **Framework & Engine** | ![Next.js 16](https://img.shields.io/badge/Next.js-v16.2-000000?logo=next.js&logoColor=white) ![React 19](https://img.shields.io/badge/React-v19.0-61DAFB?logo=react&logoColor=white) | React Server Components & server-side rendering support. |
+| **Styling & Theme** | ![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-06B6D4?logo=tailwindcss&logoColor=white) ![Next Themes](https://img.shields.io/badge/Next_Themes-Dark_Mode-black) | Tailwind v4 compilation with dark/light mode toggle. |
+| **Components & Icons** | ![shadcn/ui](https://img.shields.io/badge/shadcn/ui-Components-black?logo=shadcnui&logoColor=white) ![Lucide React](https://img.shields.io/badge/Lucide_React-Icons-purple) | Beautiful accessible component primitives (Radix UI) and icons. |
+| **Animations & Graphs** | ![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animations-0055FF?logo=framer&logoColor=white) ![Recharts](https://img.shields.io/badge/Recharts-Graphs-00C49F) | Rich dashboard graphs and micro-animations for fluid UX. |
+| **Data Fetching** | ![Axios](https://img.shields.io/badge/Axios-HTTP_Client-5A29E4?logo=axios&logoColor=white) ![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?logo=zod&logoColor=white) | Strict payload validation schema and server action queries. |
 
 ---
 
-## 🛠️ Tech Stack
+## 🏛️ Routing Slots & Dashboard Mounting
 
-### 🔹 Core Frameworks
-* **Next.js 16** (App Router)
-* **React 19**
-* **TypeScript**
+To achieve isolated dashboard scopes, this project leverages **Next.js Parallel Routes** inside the [dashboard layout](file:///l:/Project-6/Task%20Collaboration%20System/fontend/src/app/(dashboardLayout)/dashboard/layout.tsx). The router validates session cookies and routes users to specific slot views matching their role:
 
-### 🔹 Styling & UI
-* **Tailwind CSS v4**
-* **Framer Motion** (Animations)
-* **Recharts** (Data Visualization)
-* **shadcn/ui** (Component Primitives)
-* **Sonner** (Toast Notifications)
+```mermaid
+graph TD
+    UserSession[Get User Session] --> RoleCheck{User Role?}
+    RoleCheck -->|Admin| SlotAdmin[Mount @admin Slot]
+    RoleCheck -->|Project Manager| SlotPM[Mount @projectManager Slot]
+    RoleCheck -->|Team Member| SlotMember[Mount @teamMember Slot]
+    
+    SlotAdmin --> PageAdmin[Show global overview, members audit, all projects & tasks]
+    SlotPM --> PagePM[Show team & project creator views, create tasks/projects]
+    SlotMember --> PageMember[Show personal tasks list, charts, task comment hubs]
+```
 
-### 🔹 Utilities
-* **Zod** (Schema Validation)
+### Slot Configurations
+
+*   **`@admin`**: Accessible strictly by users with the `Admin` role. Handles directory management, member promotion/suspension/deletion, global project/task tracking, and systemic audit logs.
+*   **`@projectManager`**: Dedicated to `ProjectManager` role. Handles project drafting, teammate assignments, task planning, and status updates.
+*   **`@teamMember`**: Dedicated to `TeamMember` role. Focuses on personal task board Kanban boards, progress reporting, and task discussions.
 
 ---
 
 ## 📂 Repository Layout
 
-The project follows a highly modular directory structure:
+```filepath
+fontend/
+├── public/                 # Static assets (images, icons, etc.)
+├── src/
+│   ├── app/                # App Router Layouts and Routing Groups
+│   │   ├── (commonLayout)/ # Landing pages, static blocks, and auth entryways
+│   │   │   ├── (auth)/     # Login, signup, and registration pages
+│   │   │   ├── about/      # Static platform information
+│   │   │   ├── activities/ # Activity showcase views
+│   │   │   └── analytics/  # Analytics dashboard views
+│   │   ├── (dashboardLayout)/
+│   │   │   └── dashboard/  # Dashboard views separated by parallel slots
+│   │   │       ├── @admin/         # Admin slot views
+│   │   │       ├── @projectManager/# PM slot views
+│   │   │       ├── @teamMember/    # Team member slot views
+│   │   │       ├── notifications/  # Dashboard notification center
+│   │   │       ├── projects/       # Shared project views
+│   │   │       └── tasks/          # Shared task detailed boards
+│   │   ├── api/            # Local server routes & proxies
+│   │   ├── globals.css     # Tailwind CSS import declarations
+│   │   └── layout.tsx      # Core application wrapper
+│   ├── components/         # Shared and modular UI components
+│   │   ├── Admin/          # Member rows and admin control blocks
+│   │   ├── Dashboard/      # Task boards, charts, timelines, comment sections
+│   │   ├── ui/             # shadcn/ui custom components (buttons, sidebar, dropdowns)
+│   │   └── shared/         # Navbar, theme toggler, and footer modules
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Config files, env variables validator, cookie utils
+│   ├── router/             # Static navigation menus for user roles
+│   ├── services/           # Server actions & data controllers
+│   ├── types/              # Universal TypeScript models
+│   ├── zod/                # Auth schemas and client validations
+│   └── proxy.ts            # Proxy middleware router core logic
+├── package.json            # Scripts & project configurations
+├── next.config.ts          # Next.js bundler settings
+├── tailwind.config.js      # CSS styling extensions
+└── tsconfig.json           # TypeScript configuration
+```
 
-```text
-src/
-├── app/               # App router, layouts, pages, and route groups
-├── components/        # Dashboard, shared, provider, and UI components
-├── lib/               # Utilities (e.g., env.ts for strict environment validation)
-├── router/            # Role-based route definitions and navigation helpers
-├── services/          # Server actions and data-fetching handlers
-└── proxy.ts           # Handles proxying and auth headers for backend API calls
+---
+
+## 🔑 Environment Variables Setup
+
+Create a `.env.local` file in the root of the `fontend` folder and configure the matching variables:
+
+```env
+# Public Configs (Accessible on Client & Server)
+NEXT_PUBLIC_API_BASE_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_NAME="TaskFlow"
+NEXT_PUBLIC_APP_ORIGIN="http://localhost:3001"
+
+# Imgbb token for task attachment and profile picture uploads
+NEXT_PUBLIC_IIMGBB_KEY="your-imgbb-public-key"
+
+# Private Configs (Accessible only on Server Actions)
+BASE_API_URL="http://localhost:3000"
+JWT_ACCESS_SECRET="your-jwt-access-secret-matching-backend"
+JWT_REFRESH_SECRET="your-jwt-refresh-secret-matching-backend"
+IIMGBB_KEY="your-imgbb-server-key"
+```
+
+---
+
+## ⚡ Setup & Installation
+
+1.  **Clone the workspace** and navigate to the `fontend` directory:
+    ```bash
+    cd fontend
+    ```
+
+2.  **Install dependencies** using `pnpm` (which handles version locking):
+    ```bash
+    pnpm install
+    ```
+
+3.  **Run Development Server**:
+    Launch the Next.js development server:
+    ```bash
+    pnpm dev
+    ```
+    Open `http://localhost:3001` (or the port defined by your dev environment) to view the app.
+
+---
+
+## 📘 Available Scripts
+
+*   `pnpm dev`: Runs Next.js dev server on watch mode.
+*   `pnpm build`: Performs TypeScript type compilation and bundles production-ready files.
+*   `pnpm start`: Runs the built Next.js server locally in production mode.
+*   `pnpm lint`: Examines TS/JS files for syntax errors and warnings using ESLint.
+
+---
+
+## 🔄 Proxy Layer & Authentication Hooks
+
+The system uses [src/proxy.ts](file:///l:/Project-6/Task%20Collaboration%20System/fontend/src/proxy.ts) to manage proxy requests and cookie lifecycles:
+
+*   **Token Refresh Syncing**: If the `accessToken` cookie expires, the proxy automatically attempts to make a server-side request to `/auth/refresh-token` with the `refreshToken` and transparently updates cookies.
+*   **Redirect Guards**: Protects `/dashboard` routes from anonymous traffic, redirection to `/login` if authentication is invalid.
+
+> [!TIP]
+> To apply the route protection proxy logic globally, create a standard Next.js `middleware.ts` in the `src/` folder that exports the `proxy` controller:
+> ```typescript
+> // src/middleware.ts
+> import { proxy } from "./proxy";
+> export default proxy;
+> export { config } from "./proxy";
+> ```
+
+---
+
+## 📊 Dashboard Visualizations
+
+Through **Recharts**, the dashboard provides instant analytics:
+*   **Task Distribution**: Visual breakdown of task statuses (`Todo`, `InProgress`, `Completed`).
+*   **Project Allocations**: Status split metrics showing active vs on-hold vs completed projects.
+*   **Productivity Charts**: Progress markers tracking user assignments and completed checklists.
